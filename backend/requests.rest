@@ -1,0 +1,77 @@
+
+
+###
+POST http://localhost:3000/api/v1/sign-up
+Content-Type: application/json
+
+{
+    "username": "Noob123456",
+    "password": "password12345"
+}
+
+###
+POST http://localhost:3000/api/v1/login
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+{
+    "username": "Noob12345",
+    "password": "password12345"
+}
+
+###
+POST http://localhost:3000/api/v1/quiz/question
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+{
+    "question": "Which monster from fables has 4 legs",
+    "answers": ["DRAGON", "GNOLL", "GREMLIN", "HOBIT"],
+    "correctAnswer": 0,
+    "category": ["tale", "creatures"], 
+    "description": "Dragon is mythical creature from tales, that something something"
+}
+###
+
+DELETE  http://localhost:3000/api/v1/quiz/question/id/60fbecbd472c2d1b0a0e4f34
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+###
+GET  http://localhost:3000/api/v1/quiz/question/?id=60fbeebbab315d88f308f9fe
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+###
+GET  http://localhost:3000/api/v1/quiz/question/?category=tale
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+###
+
+GET  http://localhost:3000/api/v1/quiz/question/?user=Noob123456
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+###
+
+PUT  http://localhost:3000/api/v1/quiz/question/id/60fbeebbab315d88f308f9fe
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+{
+    "question": "Which monster from fables has 4 legs",
+    "answers": [ "GNOLL", "DRAGON", "GREMLIN", "HOBIT"],
+    "correctAnswer": 1,
+    "category": ["tale"], 
+    "description": "Dragon is mythical creature from tales, that something something"
+}
+###
+PUT  http://localhost:3000/api/v1/quiz/question/id/60fbeebbab315d88f308f9fe
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.Tm9vYjEyMzQ1Ng.5n731gde1VfcBOoVLIujvY6QzZF8F3IoLbUfkG0oGNM
+Content-Type: application/json
+
+{
+    "answerFromUser": 2
+}
+
