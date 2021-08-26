@@ -16,7 +16,17 @@ body {
   --red: rgb(230, 98, 98);
   --red-hovered: rgb(233, 12, 12);
   --green-correct: rgb(76, 235, 70);
+  --green-starting: rgb(17, 104, 14);
+  --green-middle: rgb(142, 202, 32);
+  --yellow-starting: rgb(247, 208, 36);
+  --orange-starting: rgb(247, 120, 36);
+  --red-finish: rgb(247, 61, 36);
   --red-bad: rgb(241, 118, 97);
+
+  --progress-circle-color: var(--green-starting);
+  --progress-circle-height: 50px;
+  --progress-circle-width: 50px
+
 }
 
 
@@ -392,13 +402,12 @@ input[type="submit"]:disabled{
   display: flex;
 }
 
-
 .answer{
   flex-grow: 1;
   padding-left: 0.5rem;
 }
 
-.answer:hover, .question-button:hover{
+.answer.hoverable:hover, .question-button:hover{
   cursor: pointer;
   background-color: #e9e9e9;
 }
@@ -455,10 +464,74 @@ input[type="submit"]:disabled{
   border-radius: 50%;
   font-size: 2rem;
   background-color: rgba(204, 183, 183, 0.733);
-  width: 2.3rem;
+  width: 2.5rem;
   text-align: center; 
-  margin-left: 0.2rem;
+  margin: 0rem;
 }
+
+
+.circular{
+  height: var(--progress-circle-height);
+  min-width: var(--progress-circle-width);
+  position: relative;
+  margin-right: 10px;
+}
+
+.circular .inner{
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 50%;
+  height: calc(var(--progress-circle-height)*0.8);
+  width: calc(var(--progress-circle-width)*0.8);
+  margin: calc(var(--progress-circle-height)*0.8*-0.5) 0 0 calc(var(--progress-circle-width)*0.8*-0.5);
+  background: #dde6f0;
+  border-radius: 100%;
+}
+
+.circular .number{
+  position: absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%);
+  z-index:10;
+  font-size:18px;
+  font-weight:500;
+  color:#4158d0;
+}
+
+.circular .bar{
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background: rgb(158, 153, 153);
+  border-radius: 100%;
+  clip: rect(0px, var(--progress-circle-width), var(--progress-circle-height), calc(var(--progress-circle-width)*0.5));
+}
+
+.circle .bar .progress{
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  border-radius: 100%;
+  clip: rect(0px, calc(var(--progress-circle-width)/2), calc(var(--progress-circle-height)), 0px);
+  background: var(--progress-circle-color);
+}
+
+.circle .left .progress{
+  z-index:1;
+  animation: left 4s linear both;
+}
+
+.circle .right {
+  transform: rotate(180deg);
+  z-index:3; 
+}
+.circle .right .progress{
+  animation: right 4s linear both;
+  animation-delay:4s;
+}
+
 
 .notFound{
   width: 40%;
@@ -601,12 +674,9 @@ textarea {
   float: left; 
 }
 
-
-
 .gridLabel label:after { 
   content: ":"; 
 }
-
 
 .topNav {
   overflow: hidden;
@@ -623,14 +693,10 @@ textarea {
   font-size: 17px;
 }
 
-
-
 .topNav a.active {
   background-color: #04AA6D;
   color: white;
 }
-
-
 
 .dropdown-content a{
   color: black;
@@ -646,7 +712,6 @@ textarea {
   background-color: white;
   margin: 3.5px 0;
 }
-
 
 .center {
   height: 100vh;

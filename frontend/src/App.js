@@ -30,11 +30,11 @@ function App() {
 
 
   const changeSidebarStatus = () => {
-    var x = document.getElementById("myTopNav");
-    if (x.className === "topNav") {
-      x.className += " responsive";
+    let topNav = document.getElementById("myTopNav");
+    if (topNav.className === "topNav") {
+      topNav.className += " responsive";
     } else {
-      x.className = "topNav";
+      topNav.className = "topNav";
     }
   }
 

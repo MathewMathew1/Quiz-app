@@ -2,11 +2,14 @@ import React, {useState, useEffect} from "react"
 import queryString from 'query-string';
 import LoadingCircle from "./LoadingCircle";
 
+
+const TIME_TO_ANSWERS = 30
+
 const Question = ({ location }) => {
     const [questions, setQuestions] =  useState([])
     const [finishedAnswering, setFinishedAnswering] = useState(false)
     const [questionNumber, setQuestionNumber] = useState(0)
-    const [remainingTime, setRemainingTime] = useState(30)
+    const [remainingTime, setRemainingTime] = useState(false)
     const [timer, setTimer] =useState("")
     const [answersLabel] = useState(["A", "B", "C", "D"])
     const [numberOfQuestions, setaNumberOfQuestions] = useState(0)
@@ -15,22 +18,36 @@ const Question = ({ location }) => {
 
     const [controller] = useState(new AbortController())
 
-    const nextQuestion = () => {
+    const nextQuestion = async () => {
         for(let i =0; i<4; i++){
             highlightAnswer(i, "white")
         }
-        setQuestionNumber(questionNumber+1)
+        
+        let elementToRotate = document.getElementById("right")
+        elementToRotate.style.transform = `rotate(${0}deg)`
+
+        elementToRotate = document.getElementById("left")
+        elementToRotate.style.transform = `rotate(${0}deg)`
+
+        let root = document.documentElement;
+        root.style.setProperty('--progress-circle-color', "--green-starting")
+        
         setFinishedAnswering(false)
-        setRemainingTime(30)
-        createTimer()
+        setQuestionNumber(questionNumber+1)
+        setRemainingTime(TIME_TO_ANSWERS)
+        
     }
 
+
+    
 
     const highlightAnswer = (answer, color) =>{
         const idOfDivOfAnswer = "a" + answer 
         const divOfAnswer = document.getElementById(idOfDivOfAnswer)
         divOfAnswer.style.backgroundColor = color
     }
+
+
 
     const userAnswer = (answer) => {
 
@@ -89,14 +106,47 @@ const Question = ({ location }) => {
         return percentageOfAllAnswers
     }
 
+    const changeColor = () => {
+        let root = document.documentElement;
+        if(remainingTime-1===25){
+            root.style.setProperty('--progress-circle-color', "var(--green-middle)")
+        }
+        if(remainingTime-1===16){
+            root.style.setProperty('--progress-circle-color', "var(--yellow-starting)")
+        }
+        if(remainingTime-1===12){
+            root.style.setProperty('--progress-circle-color', "var(--orange-starting)")
+        }
+        if(remainingTime-1===6){
+            root.style.setProperty('--progress-circle-color', "var(--red-finish)")
+        }
+    }
+
+    const rotate = () => {
+
+        if(remainingTime-1>=TIME_TO_ANSWERS/2){
+            
+            let elementToRotate = document.getElementById("left")
+            let degreeToRotate = 180/(TIME_TO_ANSWERS/2)*(TIME_TO_ANSWERS-remainingTime+1)
+            console.log(elementToRotate)
+            elementToRotate.style.transform = `rotate(${degreeToRotate}deg)`
+            return
+        }
+        let elementToRotate = document.getElementById("right")
+        let degreeToRotate = 180/(TIME_TO_ANSWERS/2)*(TIME_TO_ANSWERS/2-remainingTime+1)
+        elementToRotate.style.transform = `rotate(${degreeToRotate}deg)`
+    }
+
     useEffect(  () => {
-        if(remainingTime===30) return
+        if(remainingTime===false) return
         setTimer(setTimeout(() => {
             if (remainingTime <= 0 || finishedAnswering) {
                 destroyTimer()
                 highlightAnswer(questions[questionNumber].correctAnswer , "rgb(76, 235, 70)")
                 clearTimeout(timer)
             } else {
+                changeColor()
+                rotate()
                 setRemainingTime(remainingTime-1)
             }
         }, 1000))
@@ -105,16 +155,27 @@ const Question = ({ location }) => {
         } // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remainingTime]);
 
-    const createTimer = async () => {
-        setTimer(setTimeout(() => {
-            if (remainingTime <= 0) {
-                destroyTimer()
-                clearTimeout(timer)
-            } else {
-                setRemainingTime(remainingTime-1)
+    useEffect(  () => {
+        const makeAnswersNotHoverable = () => {
+            if(finishedAnswering===false){
+                let answers = document.getElementsByClassName("answer")
+                console.log(answers)
+                console.log(answers.length)
+                for(let i=0; i<answers.length; i++){
+                    answers[i].className += "hoverable"
+                    console.log(answers[i])
+                }
+                return
             }
-        }, 1000))
-    }
+            let answers = document.getElementsByClassName("answer")
+            console.log(answers)
+            for(let i=0; i<answers.length; i++){
+                answers[i].className = answers[i].className.replace("hoverable", "")
+                console.log(answers[i])
+            }
+        } 
+        makeAnswersNotHoverable()
+    }, [finishedAnswering])
 
     useEffect(  () => {
         const getQuestions = async() => {
@@ -147,13 +208,17 @@ const Question = ({ location }) => {
                         return
                     }
                     setQuestions(response.questions)
-                    createTimer()
                     setIsDataFetched(true)
+                    setRemainingTime(TIME_TO_ANSWERS)
                     return
                 })
                 .catch(error=>{console.log(error)})
         }
-        getQuestions() // eslint-disable-next-line react-hooks/exhaustive-deps
+        getQuestions() 
+
+        return () => {
+            controller.abort()
+        }// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     
@@ -175,9 +240,18 @@ const Question = ({ location }) => {
                                     <div className="question-text">
                                         {questions[questionNumber].question}
                                     </div>
-                                    <div className="timer">
-                                        {remainingTime}
-                                    </div> 
+                                    <div className="circular">
+                                        <div className="inner"></div>
+                                        <div className="number">{remainingTime}</div>
+                                        <div className="circle">
+                                        <div className="bar left">
+                                            <div id="left" className="progress"></div>
+                                        </div>
+                                        <div className="bar right">
+                                            <div id="right" className="progress"></div>
+                                        </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             {Array.from(Array(4), (e, i) => {
@@ -185,7 +259,7 @@ const Question = ({ location }) => {
                                     <div className="answer-box" id={"a"+i.toString()} key={i} onClick={ () => userAnswer(i)} >
                                         <div className="container">
                                             <div className="answer-label">{answersLabel[i]}</div> 
-                                            <div className="answer">{questions[questionNumber].answers[i]}</div>
+                                            <div className="answer hoverable">{questions[questionNumber].answers[i]}</div>
                                         </div>    
                                     </div>
                                 )
