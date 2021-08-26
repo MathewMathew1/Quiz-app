@@ -7,6 +7,7 @@ const SignUp = (props) => {
     const [password, setPassword] =  useState("")
     const [password2, setPassword2] =  useState("")
     const [errors, setErrors] = useState([])
+    const [controller] = useState(new AbortController())
 
     useEffect(()=>{
         if(props.user!==null) props.history.push("/category")
@@ -14,9 +15,11 @@ const SignUp = (props) => {
     },[props.user] ) 
 
     useEffect(()=>{
-        
         document.title = "sign up"
-      }, [])
+        return () => {
+            controller.abort()
+        }
+      }, [controller])
 
     const SignUp = async (event)=>{
         event.preventDefault()
@@ -33,8 +36,11 @@ const SignUp = (props) => {
             "username": username,
             "password": password,
         }
+
+        const { signal } = controller
         await fetch("http://localhost:3000/api/v1/sign-up",{
             method: "POST",
+            signal,
             body: JSON.stringify(body),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',

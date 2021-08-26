@@ -23,11 +23,14 @@ const YourQuestions = ({ location, user }) => {
     const [deletedQuestion, setDeletedQuestion] = useState(0)
 
     useEffect(  () => {
+        const controller = new AbortController()
         const getQuestions = async () => {
             let filter = queryString.parse(location.search)
             let param = `?user=${filter["user"]}`
+            const { signal } = controller
             await fetch(`http://localhost:3000/api/v1/quiz/question/${param}`,{
                 method: "GET",
+                signal,
                 headers: {
                     'Content-type': 'application/json; charset=UTF-8',
                     'Authorization': localStorage.getItem("token")
@@ -59,10 +62,12 @@ const YourQuestions = ({ location, user }) => {
                 })
                 .catch(error=>{console.log(error)})
         }   
-        
+    
         const getCategories = async () => {
+            const { signal } = controller
             await fetch(`http://localhost:3000/api/v1/quiz/categories`,{
                 method: "GET",
+                signal,
                 headers: {
                     'Content-type': 'application/json; charset=UTF-8',
                 }})
@@ -76,6 +81,11 @@ const YourQuestions = ({ location, user }) => {
         
         getCategories()
         getQuestions()
+
+        return () => {
+            controller.abort()
+        }
+
     }, [location.search])
 
     

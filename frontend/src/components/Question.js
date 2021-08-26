@@ -13,6 +13,8 @@ const Question = ({ location }) => {
     const [numberOfGoodAnswers, setNumberOfGoodAnswers] = useState(0)
     const [isDataFetched, setIsDataFetched] = useState(false)
 
+    const [controller] = useState(new AbortController())
+
     const nextQuestion = () => {
         for(let i =0; i<4; i++){
             highlightAnswer(i, "white")
@@ -51,8 +53,11 @@ const Question = ({ location }) => {
         const body = {
             "answerFromUser": answer
         }
+        
+        const { signal } = controller
         fetch(`http://localhost:3000/api/v1/quiz/question/id/${questions[questionNumber]._id}`,{
             method: "PUT",
+            signal,
             body: JSON.stringify(body),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',
@@ -72,7 +77,7 @@ const Question = ({ location }) => {
     }
 
     
-    const evaluateNumberOfAnswers = (answer, questionNumberOfAnswer) =>{
+    const evaluateNumberOfAnswers = (answer, questionNumberOfAnswer) => {
         if(questions[questionNumberOfAnswer].answersFromUsers.length===0) return "0%" 
         let numberOfAnswers = 0
         for(let i = 0; i < questions[questionNumberOfAnswer].answersFromUsers.length; i++){
@@ -126,8 +131,10 @@ const Question = ({ location }) => {
                 param = `?category=${filter["id"]}`
             }
 
+            const { signal } = controller
             await fetch(`http://localhost:3000/api/v1/quiz/question/${param}`,{
                 method: "GET",
+                signal,
                 headers: {
                     'Content-type': 'application/json; charset=UTF-8',
                     'Authorization': localStorage.getItem("token")

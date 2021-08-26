@@ -7,6 +7,8 @@ const Login = (props) => {
     const [password, setPassword] =  useState("")
     const [errors, setErrors] = useState([])
 
+    const [controller] = useState(new AbortController())
+
     useEffect(()=>{
         if(props.user!==null) props.history.push("/category")
         return // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -31,8 +33,11 @@ const Login = (props) => {
             "username": username,
             "password": password,
         }
+
+        const { signal } = controller
         await fetch("http://localhost:3000/api/v1/login",{
             method: "POST",
+            signal,
             body: JSON.stringify(body),
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',

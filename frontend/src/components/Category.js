@@ -6,7 +6,7 @@ const Category = (props) => {
     const [categories, setCategories] =  useState([])
     const [isDataFetched, setIsDataFetched] = useState(false)
 
-    
+    const [controller] = useState(new AbortController())
 
     useEffect(()=>{
         document.title = "categories"
@@ -16,8 +16,11 @@ const Category = (props) => {
             toast.className = "show";
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
         }
+
+        const { signal } = controller
         fetch("http://localhost:3000/api/v1/quiz/groups",{
         method: "GET",
+        signal,
         headers: {
             'Content-type': 'application/json; charset=UTF-8',
         }})

@@ -7,15 +7,13 @@ import SignUp from "./components/Sign-up";
 import AddQuestion from "./components/AddQuestion";
 import Question from "./components/Question"
 import YourQuestions from "./components/YourQuestions"
-import UserStats from "./components/Stats.js"
+import UserStats from "./components/Stats"
 import Logout from "./components/Logout";
+import NotFound from "./components/NotFound.js";
 
 function App() {
   const [user, setUser] = useState(null)
 
-
-  
-  
   async function login(user = null){
     setUser(user)
   }
@@ -41,12 +39,11 @@ function App() {
   }
 
   const PrivateRoute = ({component: Component, user, ...rest}) => {
-
     return (
       <Route
         {...rest}
         render={(props) => localStorage.getItem("token")
-          ? <Component {...props} />
+          ? <Component user={user} {...props} />
           : <Redirect to={{pathname: '/login', state: {from: props.location}}} />}
       />
     )
@@ -113,19 +110,15 @@ function App() {
               <Question  {...props} />
             )}
           />
-          <Route 
-            path="/profile/question"
-            render={(props) => (
-              <YourQuestions user={user} dragon={"sss"} {...props} />
-            )}
-          />
+          <PrivateRoute path="/profile/question" user={user} component={YourQuestions} />
+          <PrivateRoute path="/profile/stats" user={user} component={UserStats} />
           <Route 
             path="/logout"
             render={() => (
               <Logout/>
             )}
           />
-          <Route   path="/profile/stats" component={UserStats} />
+          <Route path="*" component={NotFound} />
         </Switch>
     </div>
   );

@@ -7,24 +7,33 @@ const UserStats = (props) => {
     const [isDataFetched, setIsDataFetched] = useState(false)
 
     useEffect(()=>{
+        const controller = new AbortController()
+        const fetchStats =  () =>{
+            const { signal } = controller
+            fetch("http://localhost:3000/api/v1/quiz/user/stats",{
+            method: "GET",
+            signal,
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+                'Authorization': localStorage.getItem("token")
+            }})
+            .then(response => response.json())
+            .then(response => {
+                console.log(response)
+                setUserStats(response)
+                setIsDataFetched(true)
+            })
+            .catch(error=>{console.log(error)})
+        }
+
         fetchStats()
+
+        return () => {
+            controller.abort()
+        }
     },[])
     
-    const fetchStats =  () =>{
-        fetch("http://localhost:3000/api/v1/quiz/user/stats",{
-        method: "GET",
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-            'Authorization': localStorage.getItem("token")
-        }})
-        .then(response => response.json())
-        .then(response => {
-            console.log(response)
-            setUserStats(response)
-            setIsDataFetched(true)
-        })
-        .catch(error=>{console.log(error)})
-    }
+    
 
     const sortUserStats = (e, field, sortOrder) => {
         let copyArray = [...userStats]

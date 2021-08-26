@@ -20,9 +20,13 @@ const AddQuestion = (props) => {
 
     useEffect(  () => {
         document.title = "Add question"
+        
+        const controller = new AbortController()
+        const { signal } = controller
         const getCategories = async () => {
             await fetch(`http://localhost:3000/api/v1/quiz/categories`,{
                 method: "GET",
+                signal,
                 headers: {
                     'Content-type': 'application/json; charset=UTF-8',
                 }})
@@ -35,7 +39,9 @@ const AddQuestion = (props) => {
         }
         
         getCategories()
-
+        return () => {
+            controller.abort()
+        }
     }, [])
 
     const createQuestion = async (e) =>{
@@ -166,7 +172,7 @@ const AddQuestion = (props) => {
                             
                             <label htmlFor="category-field">Add Category</label>
                             <div>
-                                <input autocomplete="off" placeholder="At least 4 letters" maxLength="16"  className="input margin0-bottom"  id="category-field" type="text" value={category} onChange={ (e)=>{setCategory(e.target.value.toLocaleLowerCase()); setErrors([])} } ></input>             
+                                <input autoComplete="off" placeholder="At least 4 letters" maxLength="16"  className="input margin0-bottom"  id="category-field" type="text" value={category} onChange={ (e)=>{setCategory(e.target.value.toLocaleLowerCase()); setErrors([])} } ></input>             
                                 <input disabled={category.length < 4} type="submit" style={{marginLeft: "-3rem"}} value="Add" onClick={ (e)=>addCategory(e) }></input><br/>
                                 { suggestedCategories.length > 0 && errors.length === 0 ? ( 
                                     <div className="suggestion-dropdown">
