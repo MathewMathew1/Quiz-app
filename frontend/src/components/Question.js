@@ -13,7 +13,7 @@ const Question = ({ location }) => {
     const [timer, setTimer] =useState("")
     const [answersLabel] = useState(["A", "B", "C", "D"])
     const [numberOfQuestions, setaNumberOfQuestions] = useState(0)
-    const [numberOfGoodAnswers, setNumberOfGoodAnswers] = useState(0)
+    const [wasQuestionAnsweredCorrectly, setWasQuestionAnsweredCorrectly] = useState([])
     const [isDataFetched, setIsDataFetched] = useState(false)
 
     const [controller] = useState(new AbortController())
@@ -62,9 +62,10 @@ const Question = ({ location }) => {
 
         if(goodAnswer !== answer){
             highlightAnswer(answer, "var(--red-bad)")
+            setWasQuestionAnsweredCorrectly(wasQuestionAnsweredCorrectly => [...wasQuestionAnsweredCorrectly, false])
         }
         else{
-            setNumberOfGoodAnswers(numberOfGoodAnswers+1)
+            setWasQuestionAnsweredCorrectly(wasQuestionAnsweredCorrectly => [...wasQuestionAnsweredCorrectly, true])
         }
         
         const body = {
@@ -128,10 +129,11 @@ const Question = ({ location }) => {
             
             let elementToRotate = document.getElementById("left")
             let degreeToRotate = 180/(TIME_TO_ANSWERS/2)*(TIME_TO_ANSWERS-remainingTime+1)
-            console.log(elementToRotate)
+
             elementToRotate.style.transform = `rotate(${degreeToRotate}deg)`
             return
         }
+
         let elementToRotate = document.getElementById("right")
         let degreeToRotate = 180/(TIME_TO_ANSWERS/2)*(TIME_TO_ANSWERS/2-remainingTime+1)
         elementToRotate.style.transform = `rotate(${degreeToRotate}deg)`
@@ -144,6 +146,7 @@ const Question = ({ location }) => {
                 destroyTimer()
                 highlightAnswer(questions[questionNumber].correctAnswer , "rgb(76, 235, 70)")
                 clearTimeout(timer)
+                setWasQuestionAnsweredCorrectly(wasQuestionAnsweredCorrectly => [...wasQuestionAnsweredCorrectly, false])
             } else {
                 changeColor()
                 rotate()
@@ -159,19 +162,15 @@ const Question = ({ location }) => {
         const makeAnswersNotHoverable = () => {
             if(finishedAnswering===false){
                 let answers = document.getElementsByClassName("answer")
-                console.log(answers)
-                console.log(answers.length)
+
                 for(let i=0; i<answers.length; i++){
                     answers[i].className += "hoverable"
-                    console.log(answers[i])
                 }
                 return
             }
             let answers = document.getElementsByClassName("answer")
-            console.log(answers)
             for(let i=0; i<answers.length; i++){
                 answers[i].className = answers[i].className.replace("hoverable", "")
-                console.log(answers[i])
             }
         } 
         makeAnswersNotHoverable()
@@ -232,7 +231,24 @@ const Question = ({ location }) => {
     return(
         <div>
             { isDataFetched  ? (
-               <div> 
+               <div>
+                   <div className="results-container"> 
+                        {questions.map((value, index) => {
+                            return(
+                                <div className="result-box" key={index}>
+                                    { wasQuestionAnsweredCorrectly[index] ? (
+                                        <span className="checkmark">✓</span>
+                                    ): wasQuestionAnsweredCorrectly[index]===false?
+                                        (
+                                        <span className="bad-checkmark">X</span>
+                                        
+                                        ) : null}
+                                
+                                    {index + 1}
+                                </div>
+                            )
+                        })}
+                    </div>
                    { questions.length > 0 ? (
                         <div className="questionBox">
                                 <div className="question">

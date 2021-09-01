@@ -35,7 +35,7 @@ const UserStats = (props) => {
     
     
 
-    const sortUserStats = (e, field, sortOrder) => {
+    const sortUserStats = (field, sortOrder) => {
         let copyArray = [...userStats]
 
         if(field==="amount"){
@@ -79,10 +79,11 @@ const UserStats = (props) => {
     }
 
     const accuracyOfAnswers = (category) => {
-        if(category.numberOfAllQuestions===0){
+        let numberOfUserAnswers = category.numberOfBadAnswers + category.numberOfCorrectAnswers
+        if(numberOfUserAnswers===0){
             return "0%"
         }
-        let ProgressBarWidth = Math.round((category.numberOfCorrectAnswers/category.numberOfAllQuestions)* 100)  + '%'
+        let ProgressBarWidth = Math.round((category.numberOfCorrectAnswers/numberOfUserAnswers)* 100)  + '%'
         return ProgressBarWidth
     }
 
@@ -96,20 +97,20 @@ const UserStats = (props) => {
                         <tr>
                             <th className="title">Category name 
                                 <i className="arrow" >
-                                    <i className="arrow-up" onClick={ (e) => sortUserStats(e, "name", 1)}></i>
-                                    <i className="arrow-down" onClick={ (e) => sortUserStats(e, "name", -1)}></i>
+                                    <i className="arrow-up" onClick={ () => sortUserStats("name", 1)}></i>
+                                    <i className="arrow-down" onClick={ () => sortUserStats("name", -1)}></i>
                                 </i>
                             </th>
                             <th className="title">Questions answered 
                                 <i className="arrow" >
-                                    <i className="arrow-up" onClick={ (e) => sortUserStats(e, "numberOfAllQuestions", -1)}></i>
-                                    <i className="arrow-down" onClick={ (e) => sortUserStats(e, "numberOfAllQuestions", 1)}></i>
+                                    <i className="arrow-up" onClick={ () => sortUserStats("numberOfAllQuestions", -1)}></i>
+                                    <i className="arrow-down" onClick={ () => sortUserStats("numberOfAllQuestions", 1)}></i>
                                 </i>
                             </th>
                             <th className="title">Accuracy 
                                 <i className="arrow" >
-                                    <i className="arrow-up" onClick={ (e) => sortUserStats(e, "amount", 1)}></i>
-                                    <i className="arrow-down" onClick={ (e) => sortUserStats(e, "amount", -1)}></i>
+                                    <i className="arrow-up" onClick={ () => sortUserStats("amount", 1)}></i>
+                                    <i className="arrow-down" onClick={ () => sortUserStats("amount", -1)}></i>
                                 </i>
                             </th>
                         </tr>  

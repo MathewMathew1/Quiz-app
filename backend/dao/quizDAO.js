@@ -100,10 +100,11 @@ export default class QuizDAO {
         }
     }
 
-    static async getQuestion({filters = null, page = 0, questionsPerPage = 10,} = {}){
+    static async getQuestion({filters = null, page = 0, questionsPerPage = 10, user = none} = {}){
         try {
             let query
 
+            console.log(user)
             if(filters){
                 if("id" in filters){
                     query = {"_id": {$eq: ObjectId(filters["id"])}}
@@ -140,13 +141,13 @@ export default class QuizDAO {
                             },
                         ],
                         as: "author",
-                    },
-                    
+                    },    
                 },
                 {$project: {"user" : 0, "answersFromUsers.user" : 0},}
             ]
             
             questionList = await quiz.aggregate(pipeline).toArray()
+
             
             const totalNumQuestions =  await quiz.countDocuments(query)
          

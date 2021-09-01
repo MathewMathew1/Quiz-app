@@ -126,6 +126,7 @@ export default class QuizCtrl {
     }
 
     static async apiGetQuestion(req, res, next,){
+        await AuthenticationDAO.setUser(req, res, next)
         try{
             const questionsPerPage = req.query.questionsPerPage ?parseInt(req.query.questionsPerPage, 10): 10
             const page = req.query.page ? parseInt(req.query.page, 10): 0
@@ -142,8 +143,9 @@ export default class QuizCtrl {
                 filters.user = await AuthenticationDAO.getIdFromUser(username)
             }
             
+            let user = req.user
             
-            const { questionList, totalNumQuestions} = await QuizDAO.getQuestion({filters,page,questionsPerPage,})  
+            const { questionList, totalNumQuestions} = await QuizDAO.getQuestion({user,filters,page,questionsPerPage,})  
             let response ={
                 questions: questionList,
                 page: page,
