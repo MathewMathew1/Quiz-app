@@ -1,87 +1,92 @@
-import React, {useState, useEffect} from "react"
-import LoadingCircle from "./LoadingCircle";
+import { useEffect, useState } from "react";
+import queryString from 'query-string';
+import LoadingCircle from "./MiniComponents/LoadingCircle";
+import ProgressBar from "./MiniComponents/ProgressBar"
 
-
-const Category = (props) => {
-    const [categories, setCategories] =  useState([])
+const Category = ({ location }) => {
     const [isDataFetched, setIsDataFetched] = useState(false)
+    const [categoryUserData, setUserCategoryData] = useState(Object)
+    const [categoriesBiggestAuthors, setCategoriesBiggestAuthors] = useState([])
+    const [image, setImage] = useState(Object)
 
-    const [controller] = useState(new AbortController())
+    useEffect(() => {
+        let filter = queryString.parse(location.search)
+        let param = `?category=${filter["category"]}`
+        document.title = filter["category"]
 
-    useEffect(()=>{
-        document.title = "categories"
-        if(sessionStorage.getItem("showModal") === '1'){
-            sessionStorage.removeItem("showModal")
-            let toast = document.getElementById("toast");
-            toast.className = "show";
-            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        const controller = new AbortController()
+        const fetchStats = async () =>{
+            const { signal } = controller
+            await fetch(`http://localhost:3000/api/v1/quiz/user/stats/${param}`,{
+                method: "GET",
+                signal,
+                headers: {
+                    'Content-type': 'application/json; charset=UTF-8',
+                    'Authorization': localStorage.getItem("token")
+                }})
+                .then(response => response.json())
+                .then(response => {
+                    console.log(response)
+                    setUserCategoryData(response.QuizDataForUser)
+                    setCategoriesBiggestAuthors(response.authors)
+                    setImage(response.image)
+                    setIsDataFetched(true)
+                    return
+                })
+                .catch(error=>{console.log(error)})
+            }
+        fetchStats()
+        return () => {
+            controller.abort()
         }
+    }, []);
 
-        const { signal } = controller
-        fetch("http://localhost:3000/api/v1/quiz/groups",{
-        method: "GET",
-        signal,
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-        }})
-        .then(response => response.json())
-        .then(response => {
-            console.log(response)
-            setCategories(response)
-            setIsDataFetched(true)
-        })
-        .catch(error=>{console.log(error)})
-        console.log(categories)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-      },[])
-
-      /*const handleImageChange = (e) => {
-        setImage(e.target.files[0])
-      };
-      const handleSubmit = (e) => {
-        e.preventDefault()
-        let formData = new FormData();
-        formData.append('image', image);
-        console.log(formData.get('image'))
-        fetch("http://localhost:3000/upload",{
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(response => {
-            console.log(response)
-        })
-        .catch(error=>{console.log(error)})
-      }*/
-
-
-    return(
+    return (
         <div>
-            { isDataFetched  ? (
-            <div className="columns">
-                {categories.map((value, index) => {
-                    return(
-                        <div className="card" key={index}>
-                            <img id={categories[index].name}  src={`data:image/png;base64,${categories[index].image}`} alt={categories[index].name}></img>
-                            <div key={index} className="card-content">
-                                <h4 className="card-title"><b>{categories[index].name}</b></h4>
-                                <div className="card-content">
-                                {value.categories.map((value, index2) => {
-                                    return(
-                                        <a key={index2}  href={'/question?category='+ categories[index].categories[index2]}>{categories[index].categories[index2]}</a>
-                                        
-                                    )})}    
+            { isDataFetched? (
+                <div className="categoryBox">
+                    <div className="background-image" style={{backgroundImage: `url(data:image/png;base64,${image})`}}>
+                        <h1>quiz about {categoryUserData.name} 
+                            <a className="button blue-button" href={'/question/category?category='+categoryUserData.name}>
+                                Play
+                            </a>
+                        </h1>
+                    </div> 
+                    <div className="container2">   
+                        <div className="gridLabel columns3">
+                                <div className="label-progressBar" >Your Progress in this quiz: </div>
+                                <div className="progressBarDiv">
+                                    <ProgressBar showInPercents={false} partNumber={categoryUserData.numberOfBadAnswers + categoryUserData.numberOfCorrectAnswers} WholeNumber={categoryUserData.numberOfAllQuestions} />
                                 </div>
-                            </div>
+                                <div className="label-progressBar" >Your accuracy: </div>
+                                <div className="progressBarDiv">
+                                    <ProgressBar showInPercents={true} partNumber={categoryUserData.numberOfCorrectAnswers} WholeNumber={categoryUserData.numberOfBadAnswers + categoryUserData.numberOfCorrectAnswers} />
+                                </div>
+                                <div className="label-progressBar" >Average accuracy: </div>
+                                <div className="progressBarDiv">
+                                    <ProgressBar showInPercents={true} partNumber={categoryUserData.accuracyOfUsers.numberOfCorrectAnswers} 
+                                    WholeNumber={categoryUserData.accuracyOfUsers.numberOfBadAnswers + categoryUserData.accuracyOfUsers.numberOfCorrectAnswers} />
+                                </div>
                         </div>
-                )})}
-            </div>    
+                        <div className="authorsList">
+                            <h3>Authors:</h3>
+                            <ol>
+                                {categoriesBiggestAuthors.map((value, index) => {
+                                    return(
+                                        <li key={index}>
+                                            {value.author[0].username}: {value.count}
+                                        </li>
+                                    )
+                                })}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
             ):(
                 <LoadingCircle/>
             )}
-            <div id="toast">You have logged successfully</div>
         </div>
-    )
+    );
 }
-
-export default Category
+ 
+export default Category;

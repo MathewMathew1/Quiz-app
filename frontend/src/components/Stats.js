@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react"
-import LoadingCircle from "./LoadingCircle";
 
+import LoadingCircle from "./MiniComponents/LoadingCircle";
+import ProgressBar from "./MiniComponents/ProgressBar"
 
 const UserStats = (props) => {
     const [userStats, setUserStats] =  useState([])
@@ -20,7 +21,7 @@ const UserStats = (props) => {
             .then(response => response.json())
             .then(response => {
                 console.log(response)
-                setUserStats(response)
+                setUserStats(response.userQuizData)
                 setIsDataFetched(true)
             })
             .catch(error=>{console.log(error)})
@@ -70,12 +71,11 @@ const UserStats = (props) => {
         }
     } 
 
-    const evaluateProgressBarWidth = (category) =>{
+    const showPercentageBar = (category) =>{
         if(category.numberOfAllQuestions===0){
             return "100%"
         }
-        let ProgressBarWidth = Math.round(((category.numberOfCorrectAnswers+category.numberOfBadAnswers)/category.numberOfAllQuestions)* 100)  + '%'
-        return ProgressBarWidth
+        return <ProgressBar showInPercents={false} partNumber={category.numberOfCorrectAnswers+category.numberOfBadAnswers} WholeNumber={category.numberOfAllQuestions} />
     }
 
     const accuracyOfAnswers = (category) => {
@@ -119,11 +119,10 @@ const UserStats = (props) => {
                                     <tr key={index}>
                                         <td>{category.name}</td>
                                         <td>
-                                            <div className="progress-bar">
-                                                <div style={{width: evaluateProgressBarWidth(category)}}>
-                                                    {category.numberOfCorrectAnswers+category.numberOfBadAnswers}/{category.numberOfAllQuestions}
-                                                </div>
-                                            </div>
+                                            
+                                                    {showPercentageBar(category)}
+                                                    
+                                    
                                         </td>
                                         <td>{accuracyOfAnswers(category)}</td>
                                     </tr>

@@ -2,7 +2,7 @@ import { Switch, Route, Link, Redirect } from "react-router-dom";
 import './App.css';
 import { useState, useEffect } from "react";
 import Login from "./components/Login";
-import Category from "./components/Category";
+import Categories from "./components/Categories";
 import SignUp from "./components/Sign-up";
 import AddQuestion from "./components/AddQuestion";
 import Question from "./components/Question"
@@ -10,6 +10,7 @@ import YourQuestions from "./components/YourQuestions"
 import UserStats from "./components/Stats"
 import Logout from "./components/Logout";
 import NotFound from "./components/NotFound.js";
+import Category from "./components/Category";
 
 function App() {
   const [user, setUser] = useState(null)
@@ -53,7 +54,7 @@ function App() {
     <div className="App">
       <div className="topNav" id="myTopNav">
         <a href="/" className="active">QUIZZ</a>
-        <a href="/category">Category</a>
+        <a href="/categories">Category</a>
         <a href="/add-question">Add question</a>
         { user ? (
           
@@ -80,9 +81,15 @@ function App() {
       </div>
       <Switch>
           <Route 
-            exact path={["/", "/category"]}
+            exact path={["/", "/categories"]}
             render={() => (
-              <Category />
+              <Categories />
+            )}
+          />
+          <Route 
+            exact path={"/category"}
+            render={(props) => (
+              <Category {...props} />
             )}
           />
           <Route 

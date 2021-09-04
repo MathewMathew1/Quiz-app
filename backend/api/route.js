@@ -12,7 +12,7 @@ router.route("/quiz/question").post(QuizCtrl.apiAddQuestion)
 .get(QuizCtrl.apiGetQuestion) 
 router.route("/quiz/question/id/:id").put(QuizCtrl.apiUpdateQuestion)
 .delete(QuizCtrl.apiDeleteQuestion)
-router.route("/quiz/user/stats").get(QuizCtrl.apiGetUserQuizData) 
+router.route("/quiz/user/stats/").get(QuizCategoriesCtrl.apiGetUserQuizData) 
 router.route("/quiz/groups").get(QuizCategoriesCtrl.apiGetAllGroups)
 router.route("/quiz/categories").get(QuizCategoriesCtrl.apiGetAllCategories)
 

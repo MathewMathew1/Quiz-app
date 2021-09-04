@@ -130,6 +130,7 @@ export default class QuizCtrl {
         try{
             const questionsPerPage = req.query.questionsPerPage ?parseInt(req.query.questionsPerPage, 10): 10
             const page = req.query.page ? parseInt(req.query.page, 10): 0
+            console.log(req.query)
             let filters = {}
             if (req.query.id){
                 filters.id = req.query.id
@@ -160,23 +161,7 @@ export default class QuizCtrl {
 
     }
 
-    static async apiGetUserQuizData(req, res, next){
-        try{
-            await AuthenticationDAO.setUser(req, res, next)
-            if(req.user === undefined) return res.status(403).json({error: "You must be logged in to access data."})
-            let User = req.user
-            let response = await QuizDAO.getUserQuizData(User)
-            var { error } = response
-            if (error) {
-                res.status(400).json({error: "Something went wrong" })
-                return
-            }
-            res.status(201).json(response)
-        }
-        catch(e){
-            return res.status(500).json("Something went wrong")
-        }
-    }
+    
 
     
 }

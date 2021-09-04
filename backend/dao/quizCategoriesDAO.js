@@ -1,8 +1,10 @@
 
 
 let groupCategories
+import {categories} from "../server.js"
 
 import ImagesDao from './imagesDAO.js'
+import QuizDAO from './quizDAO.js'
 
 export default class QuizCategoriesDAO {
     static async injectDB(conn) {
@@ -41,7 +43,7 @@ export default class QuizCategoriesDAO {
         try{
             let groups = await groupCategories.find()
             groups = await groups.toArray()
-            let groupsWithImage = ImagesDao.getImagesForCategories(groups)
+            let groupsWithImage = ImagesDao.getImagesForCategoriesGroups(groups)
             if(!groupsWithImage.error){
                 groups = groupsWithImage
             }
@@ -71,5 +73,37 @@ export default class QuizCategoriesDAO {
         }
     }
 
+
+    static async getUserQuizData(User) {
+        let userStatistics = []
+        try {
+            for(let i=0; i<categories.length; i++){
+                let dataFromCategory = await QuizDAO.getOneCategoryUserQuizData(User, categories[i])
+                userStatistics.push(dataFromCategory)
+            }
+            return userStatistics
+        }
+        catch(e){
+            console.log(e)
+            return { error: e }
+        }
+    }
+
+
+    static async getCategoryGroupToWhichCategoryBelongs(category) {
+        try {
+            let group = await groupCategories.findOne(
+                { categories: category },
+                {_id: 1}
+            )
+            console.log(group)
+            return group
+        }
+        catch(e){
+            console.log(e)
+            return { error: e }
+        }
+
+    }
 
 }

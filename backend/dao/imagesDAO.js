@@ -18,15 +18,15 @@ export default class ImagesDao {
         } 
     }
 
-    static async getImagesForCategories(categories) {
+    static async getImagesForCategoriesGroups(categories) {
             for(let i=0; i<categories.length; i++){
                 try{
                     let id = categories[i]._id
                     let image = await files.findOne({ image_of_id: id})
 
-                    let id_of_image = image._id
-                    let image_data = await chunks.findOne({files_id: id_of_image})
-                    categories[i].image = image_data.data
+                    let idOfImage = image._id
+                    let imageData = await chunks.findOne({files_id: idOfImage})
+                    categories[i].image = imageData.data
                 }
                 catch(e){
                    console.log(e)
@@ -34,6 +34,18 @@ export default class ImagesDao {
             }
             return categories
             
+    }
+
+    static async getImageForOneCategory(categoryGroupId) {
+        try{
+            let image = await files.findOne({ image_of_id: categoryGroupId._id})
+            let idOfImage = image._id
+            let imageData = await chunks.findOne({files_id: idOfImage})
+            return imageData.data
+        }
+        catch(e){
+           console.log(e)
+        }
     }
 
 

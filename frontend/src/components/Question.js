@@ -1,7 +1,8 @@
 import React, {useState, useEffect} from "react"
 import queryString from 'query-string';
-import LoadingCircle from "./LoadingCircle";
-
+import LoadingCircle from "./MiniComponents/LoadingCircle";
+import AfterQuiz from "./AfterQuiz";
+import ProgressBar from "./MiniComponents/ProgressBar"
 
 const TIME_TO_ANSWERS = 30
 
@@ -15,6 +16,7 @@ const Question = ({ location }) => {
     const [numberOfQuestions, setaNumberOfQuestions] = useState(0)
     const [wasQuestionAnsweredCorrectly, setWasQuestionAnsweredCorrectly] = useState([])
     const [isDataFetched, setIsDataFetched] = useState(false)
+    const [finished, setFinished] = useState(false)
 
     const [controller] = useState(new AbortController())
 
@@ -95,16 +97,15 @@ const Question = ({ location }) => {
     }
 
     
-    const evaluateNumberOfAnswers = (answer, questionNumberOfAnswer) => {
-        if(questions[questionNumberOfAnswer].answersFromUsers.length===0) return "0%" 
+    const showPercentageBar = (answer, questionNumberOfAnswer) => {
         let numberOfAnswers = 0
         for(let i = 0; i < questions[questionNumberOfAnswer].answersFromUsers.length; i++){
             if( answer === questions[questionNumberOfAnswer].answersFromUsers[i]["answerFromUser"]){
                 numberOfAnswers += 1
             }
         }
-        let percentageOfAllAnswers = Math.round((numberOfAnswers/questions[questionNumberOfAnswer].answersFromUsers.length)* 100)  + '%'
-        return percentageOfAllAnswers
+        return <ProgressBar showInPercents={true} partNumber={numberOfAnswers} WholeNumber={questions[questionNumberOfAnswer].answersFromUsers.length} />
+
     }
 
     const changeColor = () => {
@@ -220,93 +221,82 @@ const Question = ({ location }) => {
         }// eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    
-
-    const finishQuiz = () =>{
-        
-    }
-
-
-
     return(
         <div>
             { isDataFetched  ? (
                <div>
-                   <div className="results-container"> 
-                        {questions.map((value, index) => {
-                            return(
-                                <div className="result-box" key={index}>
-                                    { wasQuestionAnsweredCorrectly[index] ? (
-                                        <span className="checkmark">✓</span>
-                                    ): wasQuestionAnsweredCorrectly[index]===false?
-                                        (
-                                        <span className="bad-checkmark">X</span>
-                                        
-                                        ) : null}
-                                
-                                    {index + 1}
-                                </div>
-                            )
-                        })}
-                    </div>
-                   { questions.length > 0 ? (
-                        <div className="questionBox">
-                                <div className="question">
-                                <div className="container">
-                                    <div className="question-text">
-                                        {questions[questionNumber].question}
-                                    </div>
-                                    <div className="circular">
-                                        <div className="inner"></div>
-                                        <div className="number">{remainingTime}</div>
-                                        <div className="circle">
-                                        <div className="bar left">
-                                            <div id="left" className="progress"></div>
-                                        </div>
-                                        <div className="bar right">
-                                            <div id="right" className="progress"></div>
-                                        </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {Array.from(Array(4), (e, i) => {
-                                return ( 
-                                    <div className="answer-box" id={"a"+i.toString()} key={i} onClick={ () => userAnswer(i)} >
-                                        <div className="container">
-                                            <div className="answer-label">{answersLabel[i]}</div> 
-                                            <div className="answer hoverable">{questions[questionNumber].answers[i]}</div>
-                                        </div>    
+                   { finished  ? (
+                       <AfterQuiz questions={questions}/>
+                   ):(
+                    <div>
+                        <div className="results-container"> 
+                            {questions.map((value, index) => {
+                                return(
+                                    <div className="result-box" key={index}>
+                                        { wasQuestionAnsweredCorrectly[index] ? (
+                                            <span className="checkmark">✓</span>
+                                        ): wasQuestionAnsweredCorrectly[index]===false?
+                                            (
+                                            <span className="bad-checkmark">X</span>
+                                            ) : null}
+                                        {index + 1}
                                     </div>
                                 )
                             })}
-                            {finishedAnswering ? (
-                                <div className="question">
-                                {questions[questionNumber].description}
-                                {Array.from(Array(4), (e, i) => {
-                                    return (
-                                        <div key={i} className="container margin-top">
-                                            <div className="answer-label">{answersLabel[i]}</div>
-                                            <div className="progress-bar">
-                                                <div style={{width: evaluateNumberOfAnswers(i, questionNumber)}}>
-                                                    {evaluateNumberOfAnswers(i, questionNumber)}
+                        </div>
+                            { questions.length > 0 ? (
+                                <div className="questionBox">
+                                    <div className="question">
+                                        <div className="container">
+                                            <div className="question-text">
+                                                {questions[questionNumber].question}
+                                            </div>
+                                            <div className="circular">
+                                                <div className="inner"></div>
+                                                <div className="number">{remainingTime}</div>
+                                                <div className="circle">
+                                                <div className="bar left">
+                                                    <div id="left" className="progress"></div>
+                                                </div>
+                                                <div className="bar right">
+                                                    <div id="right" className="progress"></div>
+                                                </div>
                                                 </div>
                                             </div>
-                                        </div>    
-                                    )
-                                })}
-                                <div className="author-name">Author: {questions[questionNumber].author[0]["username"]} </div>
-                                {questionNumber + 1 < questions.length  ? (
-                                    <div className="question-button" onClick={() => nextQuestion()}>Next</div>
-                                ):<div className="question-button" onClick={() => finishQuiz()}>Finish</div>}
-
-                                </div>  
-                            ):null}
-                    </div>   
-                ) : (
-                            
-                    <p className="notFound">No question have been found under this search</p>
-                )}  
+                                        </div>
+                                    </div>
+                                    {Array.from(Array(4), (e, i) => {
+                                        return ( 
+                                            <div className="answer-box" id={"a"+i.toString()} key={i} onClick={ () => userAnswer(i)} >
+                                                <div className="container">
+                                                    <div className="answer-label">{answersLabel[i]}</div> 
+                                                    <div className="answer hoverable">{questions[questionNumber].answers[i]}</div>
+                                                </div>    
+                                            </div>
+                                        )
+                                    })}
+                                    {finishedAnswering ? (
+                                        <div className="question">
+                                        {questions[questionNumber].description}
+                                        {Array.from(Array(4), (e, i) => {
+                                            return (
+                                                <div key={i} className="container margin-top">
+                                                    <div className="answer-label">{answersLabel[i]}</div>
+                                                    {showPercentageBar(i, questionNumber)}
+                                                </div>    
+                                            )
+                                        })}
+                                        <div className="author-name">Author: {questions[questionNumber].author[0]["username"]} </div>
+                                        {questionNumber + 1 < questions.length  ? (
+                                            <div className="question-button" onClick={() => nextQuestion()}>Next</div>
+                                        ):<div className="question-button" onClick={() => setFinished(true)}>Finish</div>}
+                                        </div>  
+                                    ):null}
+                            </div> 
+                        ) : (
+                            <p className="notFound">No question have been found under this search</p>
+                        )} 
+                    </div>)}  
                 </div>    
             ):(
                 <LoadingCircle/>

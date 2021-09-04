@@ -191,6 +191,21 @@ input[type="submit"]:disabled{
   opacity: 0.5;
 }
 
+/* PageBar*/
+.PageBar{
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: rgb(141, 134, 134);
+  color: white;
+  text-align: center;
+}
+
+.link{
+  margin-left: 0.2rem;
+}
+/*end PageBar*/
 
 .align-right{
   text-align: right
@@ -352,6 +367,90 @@ input[type="submit"]:disabled{
   margin-bottom: 0.2rem;
 }
 
+/**/
+.categoryBox{
+  background-color: rgb(212, 211, 211);
+  padding: 0.5rem;
+  width: 90%;
+
+  max-width: 1000px;
+  margin: auto;
+}
+
+.background-image >  h1{
+  margin-top: 3rem;
+  text-align: center;
+  text-transform:capitalize;
+  background-color: rgb(233, 114, 114, 0.8);
+  background-blend-mode: screen;
+}
+
+.container2{
+  display: flex;
+}
+
+a.button {
+  top: 0.5rem;
+  margin-left: 1rem;
+  appearance: button;
+}
+
+a.button:hover{
+  background-color: var(--blue-hovered);
+}
+
+.columns3{
+  width: 50%;
+  max-width: 500px;
+  border: black solid;
+  padding: 0.2rem;
+}
+
+.label-progressBar{
+  display: inline-block;
+}
+
+.columns3 > *{
+  margin: 0.2rem;
+}
+
+.authorsList{
+  
+  background-color: white;
+  border: black solid;
+  display: inline-block;
+  
+  padding: 1rem;
+  justify-content: right;
+}
+
+.ProgressBarDiv {
+  flex-grow: 1;
+  max-width: 10rem;
+}
+
+.background-image{
+  height: 15rem;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; 
+  margin-bottom: 2rem;
+  background-repeat: repeat-x;
+}
+
+.background-image::before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  background-color: rgba(0,0,0,0.1);
+}
+
+/**/
 
 .stats-box {
   -webkit-user-select: none; /* Safari */        
@@ -773,15 +872,38 @@ textarea {
 
 @media screen and (max-width: 600px) {
 
+  .container2{
+    flex-wrap: wrap;
+  }
+  
+  .columns3{
+    width: 100%;
+    margin: 0;
+  }
+
+  .container2 > *{
+    width: 100%;
+  }
+
   .results-container{
     float: none;
     display: flex;
     gap: 0.2rem; 
     flex-wrap: wrap;
     overflow: auto;
-
   }
   
+  .categoryBox{
+    width: 95%;
+  }
+  
+  .categoryBox > h1{
+    text-align: left;
+    width: 100%;
+  }
+
+  
+
   .card{
     max-width: 400px;
   }

@@ -1,11 +1,14 @@
 import React, {useState, useEffect} from "react"
 import queryString from 'query-string';
 import deleteSign from "../deleteSign.png" 
-import LoadingCircle from "./LoadingCircle";
-import ReactModal from 'react-modal';;
+import LoadingCircle from "./MiniComponents/LoadingCircle";
+import ReactModal from 'react-modal';
+import ProgressBar from "./MiniComponents/ProgressBar"
+import PageBar from "./MiniComponents/PageBar";
 
 const YourQuestions = ({ location, user }) => {
 
+    const[amountOfPages, setAmountOfPages] = useState(2)
     const [questions, setQuestions] =  useState([])
     const [answersLabel] = useState(["A", "B", "C", "D"])
     const [isQuestionEdited, setIsQuestionEdited] = useState([])
@@ -22,11 +25,20 @@ const YourQuestions = ({ location, user }) => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [deletedQuestion, setDeletedQuestion] = useState(0)
 
+    const [controller] = useState(new AbortController())
+
     useEffect(  () => {
-        const controller = new AbortController()
+        getCategories()
+    }, [location.search])
+    
+    
+    useEffect(  () => {
         const getQuestions = async () => {
             let filter = queryString.parse(location.search)
             let param = `?user=${filter["user"]}`
+            if(filter["page"]){
+                param += `&page=${filter["page"]}`
+            }
             const { signal } = controller
             await fetch(`http://localhost:3000/api/v1/quiz/question/${param}`,{
                 method: "GET",
@@ -62,24 +74,6 @@ const YourQuestions = ({ location, user }) => {
                 })
                 .catch(error=>{console.log(error)})
         }   
-    
-        const getCategories = async () => {
-            const { signal } = controller
-            await fetch(`http://localhost:3000/api/v1/quiz/categories`,{
-                method: "GET",
-                signal,
-                headers: {
-                    'Content-type': 'application/json; charset=UTF-8',
-                }})
-                .then(response => response.json())
-                .then(response => {            
-                    setCategoriesForSuggestion(response)
-                    return  
-                })
-                .catch(error=>{console.log(error)})
-        }
-        
-        getCategories()
         getQuestions()
 
         return () => {
@@ -88,18 +82,30 @@ const YourQuestions = ({ location, user }) => {
 
     }, [location.search])
 
-    
+    const getCategories = async () => {
+        const { signal } = controller
+        await fetch(`http://localhost:3000/api/v1/quiz/categories`,{
+            method: "GET",
+            signal,
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            }})
+            .then(response => response.json())
+            .then(response => {            
+                setCategoriesForSuggestion(response)
+                return  
+            })
+            .catch(error=>{console.log(error)})
+    }
 
-    const evaluateNumberOfAnswers = (answer, questionNumberOfAnswer) =>{
-        if(questions[questionNumberOfAnswer].answersFromUsers.length===0) return "0%" 
+    const showPercentageBar = (answer, questionNumberOfAnswer) =>{
         let numberOfAnswers = 0
         for(let i = 0; i < questions[questionNumberOfAnswer].answersFromUsers.length; i++){
             if( answer === questions[questionNumberOfAnswer].answersFromUsers[i]["answerFromUser"]){
                 numberOfAnswers += 1
             }
         }
-        let percentageOfAllAnswers = Math.round((numberOfAnswers/questions[questionNumberOfAnswer].answersFromUsers.length)* 100)  + '%'
-        return percentageOfAllAnswers
+        return <ProgressBar showInPercents={true} partNumber={numberOfAnswers} WholeNumber={questions[questionNumberOfAnswer].answersFromUsers.length} />
     }
 
     const makeQuestionEditable = (index) => {
@@ -348,7 +354,7 @@ const YourQuestions = ({ location, user }) => {
                                                 </textarea>
                                             </div>
                                         </div>
-                                        {Array.from(Array(4), (e, i) => {
+                                        {Array.from(Array(4), (_e, i) => {
                                             return ( 
                                                 <div className="answer-box" id={"a"+i.toString()+index.toString()} key={i}  >
                                                     <div className="container">
@@ -372,16 +378,12 @@ const YourQuestions = ({ location, user }) => {
 
                                                 </textarea>
                                             </div>    
-                                            {Array.from(Array(4), (e, i) => {
+                                            {Array.from(Array(4), (_e, i) => {
                                                 return (
                                                     <div key={i} className="container margin-top">
                                                         <div className="answer-label">{answersLabel[i]}</div>
-                                                        <div className="progress-bar">
-                                                            <div style={{width: evaluateNumberOfAnswers(i, index)}}>
-                                                                {evaluateNumberOfAnswers(i, index)}
-                                                            </div>
-                                                        </div>
-                                                    </div>    
+                                                        {showPercentageBar(i, index)}
+                                                    </div>         
                                                 )
                                             })}
                                             <div className="align-right">
@@ -398,7 +400,7 @@ const YourQuestions = ({ location, user }) => {
                                                     <div className="suggestion-dropdown">
                                                         {suggestedCategories[index].map((value, index2) => { 
                                                             return(
-                                                                <div onClick={ (e) => addSuggested(value, index2) } className="suggestion" key={index2} >
+                                                                <div onClick={ (_e) => addSuggested(value, index2) } className="suggestion" key={index2} >
                                                                     {value} 
                                                                 </div>
                                                             )
@@ -444,9 +446,11 @@ const YourQuestions = ({ location, user }) => {
                                                 ) : null}
                                             </div>    
                                         </div>  
+                                        
                                     </div>   
                                 )
                          })}
+                         <PageBar amountOfPages={amountOfPages} link={"http://localhost:3001/profile/question/?user=Noob123456"}/>
                     </div>
                     ):(
                         <p className="notFound">Looks like you haven't created question yet, go <a href="/add-question">there</a> to create one</p>

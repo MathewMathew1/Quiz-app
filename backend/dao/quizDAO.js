@@ -1,7 +1,7 @@
 
 import {arrayContainsValue, ListOfObjectContainsValue} from "../functions.js"
 import mongodb from "mongodb"
-import {categories} from "../server.js"
+
 
 const ObjectId = mongodb.ObjectId
 let quiz
@@ -109,17 +109,30 @@ export default class QuizDAO {
                 if("id" in filters){
                     query = {"_id": {$eq: ObjectId(filters["id"])}}
                 } else if ("category" in filters){
-                    query = {"category": { $elemMatch: { $eq: filters["category"]  } } }
+                    query = {"category": { $elemMatch: { $eq: filters["category"]  } }, 'answersFromUsers.user': {$not: {$eq: ObjectId(user._id)}}  }
                 } else if ("user" in filters){
                     query = {"user" : {$eq: ObjectId(filters["user"]) }}
                 }
+            } // if there is search by category we want to return questions that haven't been answered yet and if none found return just questions from
+            // that category
+            
+            
+            if(await quiz.countDocuments(query)===0){
+                if ("category" in filters){
+                    query = {"category": { $elemMatch: { $eq: filters["category"]  } }}
+                }
+                else{
+                    return { questionList: [], totalNumQuestions: 0 }
+                }
             }
+            
             let questionList
-        
+            console.log(questionsPerPage * page)
             const pipeline = [
                 { $match: query },
-                { $limit : questionsPerPage },
                 { $skip: questionsPerPage * page },
+                { $limit : questionsPerPage },
+                
 
                 {$lookup: {
                         from: "users",
@@ -147,8 +160,7 @@ export default class QuizDAO {
             ]
             
             questionList = await quiz.aggregate(pipeline).toArray()
-
-            
+            console.log(questionList)
             const totalNumQuestions =  await quiz.countDocuments(query)
          
             return { questionList, totalNumQuestions}
@@ -181,6 +193,30 @@ export default class QuizDAO {
     }
 
 
+    static async getOneCategoryUsersAccuracy(category){
+        try {
+            let allQuestions = await quiz.find({category: category}).toArray()
+            let numberOfCorrectAnswers = 0
+            let numberOfBadAnswers = 0
+            for(let i = 0; i < allQuestions.length; i++){
+                for(let j = 0; j < allQuestions[i].answersFromUsers.length; j++){
+                    if(allQuestions[i].answersFromUsers[j].answerFromUser===allQuestions[i].correctAnswer){
+                        numberOfCorrectAnswers += 1
+                    }
+                    else numberOfBadAnswers += 1
+                }
+            }
+            return{
+                numberOfCorrectAnswers: numberOfCorrectAnswers,
+                numberOfBadAnswers: numberOfBadAnswers,
+            }
+        }
+        catch(e){
+            console.log(e)
+            return { error: e }
+        }
+    }
+
     static async getAllCategoriesStatistics(){
         try {
         
@@ -205,43 +241,85 @@ export default class QuizDAO {
         }
     }
 
-    static async getUserQuizData(User) {
-        let userStatistics = []
+    static async getOneCategoryUserQuizData(User, category){
         try {
-            for(let i=0; i<categories.length; i++){
+            let allQuestions = await quiz.find({category: category}).toArray()
+            let numberOfCorrectAnswers = 0
+            let numberOfBadAnswers = 0
+            for(let j=0; j<allQuestions.length; j++){
+                const result = allQuestions[j].answersFromUsers.find( ({ user }) => user.toString() === User._id.toString() )
+                if(result===undefined) continue
+
+                if(allQuestions[j].correctAnswer===result.answerFromUser){
+                    numberOfCorrectAnswers += 1
+                }
+                else numberOfBadAnswers += 1
                 
-                let allQuestions = await quiz.find({category: categories[i]}).toArray()
-
-                let numberOfCorrectAnswers = 0
-                let numberOfBadAnswers = 0
-                for(let j=0; j<allQuestions.length; j++){
-                    console.log(categories)
-                    console.log(allQuestions[j])
-                    const result = allQuestions[j].answersFromUsers.find( ({ user }) => user.toString() === User._id.toString() )
-                    if(result===undefined) continue
-
-                    if(allQuestions[j].correctAnswer===result.answerFromUser){
-                        numberOfCorrectAnswers += 1
-                    }
-                    else numberOfBadAnswers += 1
-                 
-                }
-                const dataFromCurrentCategory = {
-                    name:  categories[i], 
-                    numberOfCorrectAnswers: numberOfCorrectAnswers, 
-                    numberOfBadAnswers: numberOfBadAnswers,
-                    numberOfAllQuestions: allQuestions.length  
-                }
-                userStatistics.push(dataFromCurrentCategory)
             }
-            return userStatistics
+            const dataFromCategory = {
+                name:  category, 
+                numberOfCorrectAnswers: numberOfCorrectAnswers, 
+                numberOfBadAnswers: numberOfBadAnswers,
+                numberOfAllQuestions: allQuestions.length  
+            }
+            return dataFromCategory
         }
         catch(e){
             console.log(e)
             return { error: e }
         }
-
     }
 
 
+    static async getAllAuthorsFromCategory(category){
+        try{
+            let biggestAuthors = await quiz.aggregate([
+                {
+                  $match:{ category: category }
+                },
+                {
+                  $group: {
+                    _id: { user : "$user" },
+                    "count": { "$sum": 1 }
+                  }
+                },
+                {
+                    $sort:{
+                         "count": 1
+                    }
+                },
+                { 
+                    $limit : 5 
+                },
+                {$lookup: {
+                    from: "users",
+                    let: {
+                        user: "$_id.user",
+                    },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $eq: ["$_id", "$$user"],
+                                },
+                            },
+                        },
+                        {
+                            $project: {
+                                username:1, _id:0
+                            },
+                        },
+                    ],
+                    as: "author",
+                },    
+            },
+            {$project: {"_id" : 0}},
+            ]).toArray()
+            return biggestAuthors
+        }
+        catch(e){
+            console.log(e)
+            return { error: e }
+        }
+    }
 }
