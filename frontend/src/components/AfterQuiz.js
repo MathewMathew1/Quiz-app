@@ -1,6 +1,6 @@
 
 
-const AfterQuiz = (props) => {
+const AfterQuiz = ({category, result, remainingQuestions, questions}) => {
     console.log(props)
     return (
         <div>
