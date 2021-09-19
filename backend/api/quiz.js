@@ -51,6 +51,7 @@ export default class QuizCtrl {
 
             let response = await QuizDAO.deleteQuestion(user, questionId)
             let { error } = response
+
             if (response.deletedCount === 0 || error) {
                 res.status(400).json({error: "Couldn't delete question." })
                 return
@@ -146,12 +147,12 @@ export default class QuizCtrl {
             
             let user = req.user
             
-            const { questionList, totalNumQuestions} = await QuizDAO.getQuestion({user,filters,page,questionsPerPage,})  
+            const { questionList, unansweredQuestions} = await QuizDAO.getQuestion({user,filters,page,questionsPerPage,})  
             let response ={
                 questions: questionList,
                 page: page,
                 entries_per_page: questionsPerPage,
-                total_results: totalNumQuestions
+                unansweredQuestions: unansweredQuestions
             }
             res.json(response)
         }

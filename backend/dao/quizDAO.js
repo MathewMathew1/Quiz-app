@@ -103,37 +103,40 @@ export default class QuizDAO {
     static async getQuestion({filters = null, page = 0, questionsPerPage = 10, user = none} = {}){
         try {
             let query
-
+            let skip
+            let limit = { $limit: questionsPerPage}
             console.log(user)
             if(filters){
                 if("id" in filters){
                     query = {"_id": {$eq: ObjectId(filters["id"])}}
+                    skip = none                    
                 } else if ("category" in filters){
                     query = {"category": { $elemMatch: { $eq: filters["category"]  } }, 'answersFromUsers.user': {$not: {$eq: ObjectId(user._id)}}  }
+                    skip = { $sample: { size: questionsPerPage } }                    
                 } else if ("user" in filters){
                     query = {"user" : {$eq: ObjectId(filters["user"]) }}
+                    skip = { $skip: questionsPerPage * page }                    
                 }
             } // if there is search by category we want to return questions that haven't been answered yet and if none found return just questions from
             // that category
             
-            
-            if(await quiz.countDocuments(query)===0){
+            const totalNumQuestions =  await quiz.countDocuments(query)
+
+            if(totalNumQuestions===0){
                 if ("category" in filters){
                     query = {"category": { $elemMatch: { $eq: filters["category"]  } }}
                 }
                 else{
-                    return { questionList: [], totalNumQuestions: 0 }
+                    return { questionList: [], unansweredQuestions: 0 }
                 }
             }
             
             let questionList
-            console.log(questionsPerPage * page)
+            console.log(questionsPerPage * page) ///{ $sample: { size: questionsPerPage } },
             const pipeline = [
                 { $match: query },
-                { $skip: questionsPerPage * page },
-                { $limit : questionsPerPage },
-                
-
+                skip,
+                limit,
                 {$lookup: {
                         from: "users",
                         let: {
@@ -159,14 +162,14 @@ export default class QuizDAO {
                 {$project: {"user" : 0, "answersFromUsers.user" : 0},}
             ]
             
+            const unansweredQuestions = Math.max(totalNumQuestions-questionsPerPage, 0)
             questionList = await quiz.aggregate(pipeline).toArray()
-            console.log(questionList)
-            const totalNumQuestions =  await quiz.countDocuments(query)
+            
          
-            return { questionList, totalNumQuestions}
+            return { questionList, unansweredQuestions}
         } catch (e) {
             console.log(e)
-            return { questionList: [], totalNumQuestions: 0 }
+            return { questionList: [], unansweredQuestions: 0 }
         }
     }
 

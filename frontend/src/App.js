@@ -1,19 +1,25 @@
-import { Switch, Route, Link, Redirect } from "react-router-dom";
+import { Switch, Route, Link} from "react-router-dom";
 import './App.css';
 import { useState, useEffect } from "react";
 import Login from "./components/Login";
 import Categories from "./components/Categories";
 import SignUp from "./components/Sign-up";
 import AddQuestion from "./components/AddQuestion";
-import Question from "./components/Question"
+import Quiz from "./components/Quiz"
 import YourQuestions from "./components/YourQuestions"
 import UserStats from "./components/Stats"
 import Logout from "./components/Logout";
 import NotFound from "./components/NotFound.js";
 import Category from "./components/Category";
+import AdminPage from "./components/AdminPage";
+import PrivateRoute from "./components/MiniComponents/PrivateRoute";
+import AdminRoute from "./components/MiniComponents/AdminRoute";
+
+
 
 function App() {
   const [user, setUser] = useState(null)
+  const [isUserAdmin, setIsUserAdmin] = useState(false)
 
   async function login(user = null){
     setUser(user)
@@ -21,14 +27,37 @@ function App() {
 
   async function logout(){
     setUser(null)
+    setIsUserAdmin(false)
     localStorage.removeItem("username")
     localStorage.removeItem("token")
   }
 
   useEffect(()=>{
     if(localStorage.getItem("username")) login(localStorage.getItem("username"))
+
+    IsUserAdmin()
   }, [])
 
+  const IsUserAdmin = () => {
+      const controller = new AbortController()
+      const { signal } = controller
+      fetch(`http://localhost:3000/api/v1/admin`,{
+          method: "GET",
+          signal,
+          headers: {
+              'Content-type': 'application/json; charset=UTF-8',
+              'Authorization': localStorage.getItem("token")
+          }})
+          .then(response => response.json())
+          .then(response => {
+              console.log(response)
+              if(response.error){
+                setIsUserAdmin(false)
+              }
+              setIsUserAdmin(response)
+          })
+          .catch(error=>{console.log(error)}) 
+  }
 
   const changeSidebarStatus = () => {
     let topNav = document.getElementById("myTopNav");
@@ -39,16 +68,7 @@ function App() {
     }
   }
 
-  const PrivateRoute = ({component: Component, user, ...rest}) => {
-    return (
-      <Route
-        {...rest}
-        render={(props) => localStorage.getItem("token")
-          ? <Component user={user} {...props} />
-          : <Redirect to={{pathname: '/login', state: {from: props.location}}} />}
-      />
-    )
-  }
+ 
 
   return (
     <div className="App">
@@ -64,6 +84,7 @@ function App() {
             <li className="dropdown-content">
               <a href="/profile/stats">Stats</a>
               <a href={'/profile/question/?user='+ user}>Your questions</a>
+              { isUserAdmin ? (<a href="/profile/admin">Admin</a>):null}
               <a href="/logout" onClick={logout}>Log out</a>
             </li>
           </div>
@@ -114,11 +135,12 @@ function App() {
           <Route 
             path="/question"
             render={(props) => (
-              <Question  {...props} />
+              <Quiz  {...props} />
             )}
           />
           <PrivateRoute path="/profile/question" user={user} component={YourQuestions} />
           <PrivateRoute path="/profile/stats" user={user} component={UserStats} />
+          <AdminRoute path="/profile/admin" user={user} component={AdminPage} isUserAdmin={isUserAdmin} />
           <Route 
             path="/logout"
             render={() => (

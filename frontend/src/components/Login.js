@@ -1,11 +1,12 @@
 import React, {useState, useEffect} from "react"
+import useArray from "./CustomHooks/useArray"
 import person from "../person.png"
 
 const Login = (props) => {
 
     const [username, setUserName] =  useState("")
     const [password, setPassword] =  useState("")
-    const [errors, setErrors] = useState([])
+    const errors = useArray([])
 
     const [controller] = useState(new AbortController())
 
@@ -27,7 +28,7 @@ const Login = (props) => {
     const Login = async (event)=>{
         event.preventDefault()
         
-        setErrors([])
+        let newErrors = []
         
         const body = {
             "username": username,
@@ -50,9 +51,11 @@ const Login = (props) => {
                     localStorage.setItem("username", username)
                     props.login(username)
                     props.history.push("/category")
+                    errors.set(newErrors)
                   }
                   else{
-                    setErrors(["An Incorrect password or username"])
+                    newErrors.push("An Incorrect password or username")
+                    errors.set(newErrors)
                     setUserName("")
                     setPassword("")
                   }
@@ -77,7 +80,7 @@ const Login = (props) => {
                     <input className="input" id="username-field" placeholder="Username" type="text" value={username} onChange={ (e)=>setUserName(e.target.value)} required></input><br/>
                     <label htmlFor="username">Password:</label><br/>
                     <input className="input" id="password-field" type="password" placeholder="password" value={password} onChange={ (e)=>setPassword(e.target.value)} required></input><br/>
-                    {errors.map((value) => {
+                    {errors.array.map((value) => {
                         return(
                             <div className="error">{value}</div>
                         )

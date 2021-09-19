@@ -33,9 +33,43 @@ body {
 .dropdown {
   width: 100%;
   height: 100%;
+}
+
+/*question spoiler*/
+.spoiler{
+  position: relative ;
+  background-color: #9da09d;
+  border: rgb(97, 79, 79) solid;
+  padding: 0.4rem;
+  margin: 1rem;
+}
+
+.spoiler-arrow {
+  right: 0;
+  border: solid black;
+  border-width: 0 3px 3px 0;
+  display: inline-block;
+  padding: 3px;
+}
+
+.right-corner{
+
+  position: absolute;
+  right: 0.2rem;
+  top: 0.2rem;
   
 }
 
+.up {
+  transform: rotate(-135deg);
+  -webkit-transform: rotate(-135deg);
+}
+
+.down {
+  transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+}
+/**/
 .dropdown-content {
   display: none;
   position: absolute;
@@ -141,12 +175,17 @@ a{
 }
 
 .suggestion-dropdown{
-  width: 16rem;
+  width: 100%;
   padding: 0.4rem 0.4rem;
+  border: black solid;
   margin: 0;
   box-sizing: border-box;
   background-color: white;
   float: right; 
+}
+
+.blockForSuggestion{
+  display: inline-block
 }
 
 .suggestion{
@@ -180,7 +219,7 @@ input[type="submit"] {
   color: white;
   border: 0;
   -webkit-appearance: none;
-  content: "+sassasas";
+
 }
 
 input[type="submit"]:hover:enabled{
@@ -194,6 +233,7 @@ input[type="submit"]:disabled{
 /* PageBar*/
 .PageBar{
   position: fixed;
+  
   left: 0;
   bottom: 0;
   width: 100%;
@@ -206,6 +246,50 @@ input[type="submit"]:disabled{
   margin-left: 0.2rem;
 }
 /*end PageBar*/
+
+/* adminPage*/
+.adminPage-categories{
+  display: flex;
+  flex-wrap: wrap;
+  padding-bottom: 2rem;
+  gap: 4rem;
+  background-color: #d4c5c5;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.adminPage-categories> div{
+  margin-top: 1rem;
+  min-width: 200px;
+  width: 18%;
+  flex-basis: 20%;
+  background-color: white;
+}
+
+
+
+.category-title-name{
+  background-color: var(--blue);
+  color: white;
+  border: rgb(66, 56, 56) solid;
+  text-align: center;
+}
+
+.category-name{
+  border-style: double;
+  border: rgb(66, 56, 56) solid;
+  text-align: center;
+}
+
+.category-name:hover{
+  background-color: rgb(219, 197, 197);
+}
+
+.category-title-name:hover{
+  background-color: var(--blue-hovered);
+}
+
+/* adminPage*/
 
 .align-right{
   text-align: right
@@ -322,7 +406,7 @@ input[type="submit"]:disabled{
 .columns, .columns2{
   display: flex;
   flex-wrap: wrap;
-  
+  padding-bottom: 2rem;
   margin-left: 3rem;
 }
 
@@ -357,7 +441,8 @@ input[type="submit"]:disabled{
   background-color: thistle;
   margin: auto;
   margin-top: 1rem;
-  width: 40%;
+  width: 45%;
+  max-width: 600px;
   padding: 1rem, 1.5rem;
   word-wrap: break-word
 }
@@ -804,6 +889,10 @@ textarea {
   content: ":"; 
 }
 
+.no-border{
+  border: none;
+}
+
 .topNav {
   overflow: hidden;
   background-color: #333;
@@ -830,6 +919,13 @@ textarea {
 
 .topNav .icon {
   display: none;
+}
+
+#category-field0{
+  margin-bottom: 0rem;
+
+  border-radius: 0px;
+ 
 }
 
 .hamburger{
@@ -871,6 +967,10 @@ textarea {
 
 
 @media screen and (max-width: 600px) {
+
+  .blockForSuggestion{
+    display: block
+  }
 
   .container2{
     flex-wrap: wrap;

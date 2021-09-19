@@ -9,7 +9,17 @@ import { redisClient } from "../server.js"
 export default class QuizCategoriesCtrl {
     static async apiGetAllGroups(req, res, next){
         try{
-
+            let updatedData = req.query.updatedData
+            console.log("updatedData="+updatedData)
+            if(updatedData){
+                let groups = await QuizCategoriesDAO.getAllCategoriesInGroups()
+                var { error } = groups
+                if(error){
+                    return res.status(400).json({error: "Unexpected error, try again." })
+                }
+                console.log(groups)
+                return res.json(groups)
+            }
             let groups 
 
             groups = redisClient.get("groups", function(err, reply) {
@@ -31,7 +41,7 @@ export default class QuizCategoriesCtrl {
     static async apiGetAllCategories(req, res, next){
         try{
             let categories
-
+            req.query
             categories = redisClient.get("categories", function(err, reply) {
     
                 if (err) {

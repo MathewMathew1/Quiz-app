@@ -1,12 +1,13 @@
 import React, {useState, useEffect} from "react"
 import person from "../person.png"
+import useArray from "./CustomHooks/useArray"
 
 const SignUp = (props) => {
 
     const [username, setUserName] =  useState("")
     const [password, setPassword] =  useState("")
     const [password2, setPassword2] =  useState("")
-    const [errors, setErrors] = useState([])
+    const errors = useArray([])
     const [controller] = useState(new AbortController())
 
     useEffect(()=>{
@@ -29,7 +30,7 @@ const SignUp = (props) => {
         if(password !== password2) errorsInForm.push("Passwords doesn't match")
         if(username.length<3) errorsInForm.push("Username too short")
         if(username.length>16) errorsInForm.push("Username too long")
-        setErrors(errorsInForm)
+        errors.set(errorsInForm)
         if(errorsInForm.length>0) return
 
         const body = {
@@ -49,10 +50,7 @@ const SignUp = (props) => {
             .then(response => {
                 console.log(response)
                 if(response.error){
-                    setErrors(errors => [...errors, response.error])
-                    setUserName("")
-                    setPassword("")
-                    setPassword2("")
+                    errors.push(response.error)
                     return
                 }
                 sessionStorage.setItem("showModal", "1")
@@ -81,7 +79,7 @@ const SignUp = (props) => {
                     <input className="input" id="password-field" type="password" placeholder="Password(at least 8 letters)" value={password} onChange={ (e)=>setPassword(e.target.value)} required></input><br/>
                     <label htmlFor="username">Repeat Password:</label><br/>
                     <input className="input" id="password2-field" type="password" placeholder="Repeat password" value={password2} onChange={ (e)=>setPassword2(e.target.value)} required></input><br/>
-                    {errors.map((value) => {
+                    {errors.array.map((value) => {
                         return(
                             <div className="error">{value}</div>
                         )

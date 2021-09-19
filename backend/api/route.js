@@ -8,6 +8,7 @@ const router = express.Router()
 
 router.route("/sign-up").post(AuthenticationCtrl.apiSignUp)
 router.route("/login").post(AuthenticationCtrl.apiLoginIn)
+router.route("/admin").get(AuthenticationCtrl.apiIsUserAdmin)
 router.route("/quiz/question").post(QuizCtrl.apiAddQuestion)
 .get(QuizCtrl.apiGetQuestion) 
 router.route("/quiz/question/id/:id").put(QuizCtrl.apiUpdateQuestion)

@@ -20,10 +20,19 @@ export default class QuizCategoriesDAO {
         } 
     }
 
+    static async getAllCategoriesInGroups(){
+        try{
+            let categoriesGroups = await groupCategories.find({}).project({  categories: 1, name:1,  _id: 0 }).toArray()
+            return categoriesGroups
+        }
+        catch(e){
+            return {error: e}
+        }
+    }
+
     static async getAllCategories() {
         try{
-            let categories = await groupCategories.find({}
-            ).project({  categories: 1, _id: 0 }).toArray()
+            let categories = await groupCategories.find({}).project({  categories: 1, _id: 0 }).toArray()
             
             let listOfAllCategories = [] 
             for(let i=0; i<categories.length; i++){

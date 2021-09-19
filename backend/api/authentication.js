@@ -56,4 +56,26 @@ export default class AuthenticationCtrl {
             res.status(500).json({ error: "Something went wrong try again" })
           }
     }
+
+
+    static async apiIsUserAdmin(req, res, next){
+        try{
+            const authHeader = req.headers["authorization"]
+            const token = authHeader.split(' ')[1]
+            
+            let response = await AuthenticationDAO.isUserAdmin(token)
+            
+            var { error } = response
+            console.log(response)
+            if (error) {
+                res.status(400).json({error: " Unexpected Error occurred" })
+                return
+            }
+            res.status(201).json(response)
+        }
+        catch (e) {
+            console.log(e)
+            res.status(500).json({ error: "Something went wrong try again" })
+          }
+    }
 }

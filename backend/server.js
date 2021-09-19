@@ -123,7 +123,7 @@ const createNewCategories = async () =>{
         QuizCategoriesDAO.createNewCategory(categoriesStatistics[i].name) 
         currentCategories.push(categoriesStatistics[i].name)
     }
-
+    
     redisClient.set("categories", JSON.stringify(currentCategories));
     categories = currentCategories
     await updateDataSendToUser()
@@ -134,7 +134,7 @@ const createNewCategories = async () =>{
 const updateDataSendToUser = async () => {
   
   let groups = await QuizCategoriesDAO.getAllGroups()
-
+  
   redisClient.set("groups", JSON.stringify(groups))
   
   return

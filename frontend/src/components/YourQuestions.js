@@ -1,31 +1,24 @@
 import React, {useState, useEffect} from "react"
 import queryString from 'query-string';
-import deleteSign from "../deleteSign.png" 
+import DeleteModal from "./modals/DeleteModal" 
 import LoadingCircle from "./MiniComponents/LoadingCircle";
-import ReactModal from 'react-modal';
-import ProgressBar from "./MiniComponents/ProgressBar"
 import PageBar from "./MiniComponents/PageBar";
+import { QuestionEdit } from "./Question";
+
+const VARIABLES = {
+    amountOfQuestionsPerPage: 10
+} 
 
 const YourQuestions = ({ location, user }) => {
 
     const[amountOfPages, setAmountOfPages] = useState(2)
     const [questions, setQuestions] =  useState([])
-    const [answersLabel] = useState(["A", "B", "C", "D"])
-    const [isQuestionEdited, setIsQuestionEdited] = useState([])
-    const [errorsInUpdateOfQuestion, setErrorsInUpdateOfQuestion] = useState([])
     const [questionsCopy, setQuestionsCopy] = useState([])
-    const [newCategories, setNewCategories] = useState([])
-    const [newCategoriesErrors, setNewCategoriesErrors] = useState([])
-    const [dropData, setDropData] = useState([])
     const [isDataFetched, setIsDataFetched] = useState(false)
-
     const [categoriesForSuggestion, setCategoriesForSuggestion] = useState([])
-    const [suggestedCategories, setSuggestedCategories] = useState([])
-
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [deletedQuestion, setDeletedQuestion] = useState(0)
-
+    const[isModalOpen, setIsModalOpen] = useState(false)
     const [controller] = useState(new AbortController())
+    const [questionBeingDeleted, setQuestionBeingDeleted] = useState(0)
 
     useEffect(  () => {
         getCategories()
@@ -49,26 +42,19 @@ const YourQuestions = ({ location, user }) => {
                 }})
                 .then(response => response.json())
                 .then(response => {
+                    let questions = response.questions
                     console.log(response)
-                    let isQuestionEdited = []
-                    let errorsInUpdateOfQuestion = []
-                    let newCategories = []
-                    let newCategoriesErrors = []
-                    let suggestedCategories = []
-                    for(let i=0; i<response.questions.length; i++){
-                        isQuestionEdited.push(false)
-                        errorsInUpdateOfQuestion.push([])
-                        newCategoriesErrors.push([])
-                        newCategories.push('')
-                        suggestedCategories.push([])
-                        setDropData(dropData => [...dropData, false])
+                    let amountOfPages = Math.ceil(questions.length/VARIABLES.amountOfQuestionsPerPage) + 1
+                    setAmountOfPages(amountOfPages)
+                    for(let i=0; i<questions.length; i++){
+                        questions[i]["isQuestionEdited"]=false
+                        questions[i]["errorsInUpdateOfQuestion"] = []
+                        questions[i]["NewCategoryErrors"] = []
+                        questions[i]["NewCategory"] = []
+                        questions[i]["suggestedCategories"] = []
+                        questions[i]["dropData"] = false
                     }
-                    setNewCategoriesErrors(newCategoriesErrors)
-                    setNewCategories(newCategories)
-                    setSuggestedCategories(suggestedCategories)
-                    setErrorsInUpdateOfQuestion(errorsInUpdateOfQuestion)
-                    setIsQuestionEdited(isQuestionEdited)
-                    setQuestions(response.questions)
+                    setQuestions(questions)
                     setIsDataFetched(true)
                     return  
                 })
@@ -98,21 +84,13 @@ const YourQuestions = ({ location, user }) => {
             .catch(error=>{console.log(error)})
     }
 
-    const showPercentageBar = (answer, questionNumberOfAnswer) =>{
-        let numberOfAnswers = 0
-        for(let i = 0; i < questions[questionNumberOfAnswer].answersFromUsers.length; i++){
-            if( answer === questions[questionNumberOfAnswer].answersFromUsers[i]["answerFromUser"]){
-                numberOfAnswers += 1
-            }
-        }
-        return <ProgressBar showInPercents={true} partNumber={numberOfAnswers} WholeNumber={questions[questionNumberOfAnswer].answersFromUsers.length} />
-    }
+    
 
     const makeQuestionEditable = (index) => {
-        let copyIsQuestionEdited = [...isQuestionEdited]
-        copyIsQuestionEdited[index] = true
-        setIsQuestionEdited(copyIsQuestionEdited)
-        
+        let copyQuestions = [...questions]
+        copyQuestions[index].isQuestionEdited = true
+        setQuestions(copyQuestions)
+
         let copyQuestionsCopy = [...questionsCopy]
 
         copyQuestionsCopy.push(
@@ -136,17 +114,18 @@ const YourQuestions = ({ location, user }) => {
                 break
             }
         }
+        copyQuestions[index].isQuestionEdited = false
+
         setQuestions(copyQuestions)
         setQuestionsCopy(copyQuestionsCopy)
         
-        let copyIsQuestionEdited = [...isQuestionEdited]
-        copyIsQuestionEdited[index] = false
-        setIsQuestionEdited(copyIsQuestionEdited)
+        
     }
 
     const deleteQuestionInBackend = async () => {
 
-        await fetch(`http://localhost:3000/api/v1/quiz/question/id/${questions[deletedQuestion]._id}`,{
+        setIsModalOpen(false)
+        await fetch(`http://localhost:3000/api/v1/quiz/question/id/${questions[questionBeingDeleted]._id}`,{
             method: "DELETE",
             headers: {
                 'Content-type': 'application/json; charset=UTF-8',
@@ -155,30 +134,30 @@ const YourQuestions = ({ location, user }) => {
             .then(response => response.json())
             .then(response => {
                 console.log(response)
+                let copyQuestions = [...questions]
                 if(!response.error){
-                    let copyQuestions = [...questions]
-                    copyQuestions[deletedQuestion].splice(deletedQuestion, 1)
+                    copyQuestions[questionBeingDeleted].splice(questionBeingDeleted, 1)
+                    setQuestions(copyQuestions)
                     return
                 }
-                let copyErrorsInUpdateOfQuestion = [...errorsInUpdateOfQuestion]
-                copyErrorsInUpdateOfQuestion[deletedQuestion].push("Couldn't delete question.")
-                setErrorsInUpdateOfQuestion(copyErrorsInUpdateOfQuestion)
+                
+                copyQuestions[questionBeingDeleted].errorsInUpdateOfQuestion = ["Couldn't delete question."]
+                setQuestions(copyQuestions)
             })
             .catch(error=>{console.log(error)})
             
     }
 
     const changeQuestionInBackend = async (index) => {
-        let copyErrorsInUpdateOfQuestion = [...errorsInUpdateOfQuestion]
-        copyErrorsInUpdateOfQuestion[index] = []
-        setErrorsInUpdateOfQuestion(copyErrorsInUpdateOfQuestion)
+        let copyQuestions = [...questions]
+        copyQuestions[index].errorsInUpdateOfQuestion = []    
         
         for(let i=0; i<questionsCopy.length; i++){
             if(index===questionsCopy[i].id){
-                const isQuestionNotChanged = JSON.stringify(questions[index])===JSON.stringify(questionsCopy[i].question) && dropData[index] === false
+                const isQuestionNotChanged = JSON.stringify(questions[index])===JSON.stringify(questionsCopy[i].question) && questions[index].dropData === false
                 if(isQuestionNotChanged){
-                    copyErrorsInUpdateOfQuestion[index].push("Updated question cannot be the same as old one.")
-                    setErrorsInUpdateOfQuestion(copyErrorsInUpdateOfQuestion)
+                    copyQuestions[index].errorsInUpdateOfQuestion.push("Updated question cannot be the same as old one.")
+                    setQuestions(copyQuestions)
                     return
                 }
             }
@@ -190,7 +169,7 @@ const YourQuestions = ({ location, user }) => {
             "correctAnswer":  questions[index].correctAnswer,
             "category": questions[index].category, 
             "description": questions[index].description, 
-            "dropData": dropData[index],
+            "dropData": questions[index].dropData,
         }
         const param = `id/${questions[index]._id}`
 
@@ -205,13 +184,12 @@ const YourQuestions = ({ location, user }) => {
             .then(response => {
                 console.log(response)
                 if(response.error){
-                    copyErrorsInUpdateOfQuestion[index].push(response.error)
-                    setErrorsInUpdateOfQuestion(copyErrorsInUpdateOfQuestion)
+                    copyQuestions[index].errorsInUpdateOfQuestion.push(response.error)
+                    setQuestions(copyQuestions)
                     return
                 }
                 
-                if(dropData[index]){
-                    let copyQuestions = questions
+                if(questions[index].dropData){
                     copyQuestions[index].answersFromUsers = []
                     setQuestions(copyQuestions)
                 }
@@ -225,9 +203,8 @@ const YourQuestions = ({ location, user }) => {
                 }
                 setQuestionsCopy(copyQuestionsCopy)
 
-                let copyIsQuestionEdited = [...isQuestionEdited]
-                copyIsQuestionEdited[index] = false
-                setIsQuestionEdited(copyIsQuestionEdited)
+                copyQuestions[index].isQuestionEdited = false
+                setQuestions(copyQuestions)
             })
             .catch(error=>{console.log(error)})
     }
@@ -246,63 +223,53 @@ const YourQuestions = ({ location, user }) => {
 
     const changeAnswers = (e, index, i) =>{
         let copyQuestions = [...questions]
-        copyQuestions[index].answers[i] = e.target.value
-        
+        copyQuestions[index].answers[i] = e.target.value   
         setQuestions(copyQuestions)
     }
 
     const changeCorrectAnswer = (e, index) => {
-        if(isQuestionEdited[index]===false) return
+        if(questions[index].isQuestionEdited===false) return
         let copyQuestions = [...questions]
         copyQuestions[index].correctAnswer = parseInt(e.target.value)
         setQuestions(copyQuestions)
     }
 
     const changeCategory = (e, index) => {
-        let copyNewCategories = [...newCategories]
-        copyNewCategories[index] = e.target.value.toLocaleLowerCase()
-        setNewCategories(copyNewCategories)
-
+        let copyQuestions = [...questions]
+        copyQuestions[index].NewCategory = e.target.value.toLocaleLowerCase()
+        copyQuestions[index].suggestedCategories = []
         if( e.target.value.length<3){
-            let copySuggestedCategories = [...suggestedCategories]
-            copySuggestedCategories[index] = []
-            setSuggestedCategories(copySuggestedCategories)
+            setQuestions(copyQuestions)
             return
         }
         
-        let copySuggestedCategories = suggestedCategories
-        copySuggestedCategories[index] = []
         for(let i=0; i<categoriesForSuggestion.length; i++){
-            if(copySuggestedCategories[index].length>3){
+            if(copyQuestions[index].suggestedCategories.length>3){
                break 
             }
-            if(categoriesForSuggestion[i].includes(e.target.value) && !newCategories[index].includes(categoriesForSuggestion[i])){
-                copySuggestedCategories[index].push(categoriesForSuggestion[i])
+            if(categoriesForSuggestion[i].includes(e.target.value) && !copyQuestions[index].category.includes(categoriesForSuggestion[i])){
+                copyQuestions[index].suggestedCategories.push(categoriesForSuggestion[i])
             }
         }
-        setSuggestedCategories(copySuggestedCategories)
+        setQuestions(copyQuestions)
     }
 
     const addCategory = (e, index) => {
-       
         e.preventDefault()
-        let copyNewCategoryErrors = [...newCategoriesErrors]
-        copyNewCategoryErrors[index] = []
-
-        setNewCategoriesErrors(copyNewCategoryErrors)
+        let copyQuestions = [...questions]
+        copyQuestions[index].NewCategoryErrors = []
         
-        if (newCategories[index].length < 4){
-            copyNewCategoryErrors[index].push("Category name too short at least 4 letters required")
-            setNewCategoriesErrors(copyNewCategoryErrors)
+        if (copyQuestions[index].NewCategory.length < 4){
+            copyQuestions[index].NewCategoryErrors.push("Category name too short at least 4 letters required")
+            setQuestions(copyQuestions)
             return
         }
         
-        let copySuggestedCategories = suggestedCategories
-        copySuggestedCategories[index] = []
-        setSuggestedCategories(copySuggestedCategories)
 
-        let copyQuestions = [...questions]
-        copyQuestions[index].category.push(newCategories[index])
+        copyQuestions[index].suggestedCategories = []
+
+        copyQuestions[index].category.push(copyQuestions[index].NewCategory)
+        copyQuestions[index].NewCategory = ""
         setQuestions(copyQuestions)
     }
 
@@ -313,144 +280,41 @@ const YourQuestions = ({ location, user }) => {
     }
 
     const changeDropData = (index) => {
-        let copyDropData = [...dropData]
-        copyDropData[index] = !copyDropData[index]
-        setDropData(copyDropData)
+        let copyQuestions = [...questions]
+        copyQuestions[index].dropData = !copyQuestions[index].dropData
+        setQuestions(copyQuestions)
     }
 
-    const addSuggested = (value, index) =>{
-        
-        let copyNewCategories = [...newCategories]
-        copyNewCategories[index] = []
-        setNewCategories(copyNewCategories)
-
+    const addSuggested = (value, index) =>{  
         let copyQuestions = [...questions]
+        copyQuestions[index].NewCategory = []
+        copyQuestions[index].suggestedCategories = []
         copyQuestions[index].category.push(value)
         setQuestions(copyQuestions)
-        
-        let copySuggestedCategories = [...suggestedCategories]
-        copySuggestedCategories[index] = []
-        setSuggestedCategories(copySuggestedCategories)
     } 
 
-    const deleteQuestion = (index) => {
-        setIsModalOpen(true)
-        setDeletedQuestion(index)
-    }
+
 
     return(
         <div> 
             { isDataFetched  ? (
                <div> 
                    { questions.length > 0 ? (  
-                        <div className="container columns2">
-                            {questions.map((value, index) => {
-                                return(
-                                    <div key={index} className="questionBox">
-                                        <div className="question">
-                                            <div className="container">
-                                                <label htmlFor={"textArea"+index.toString()+index.toString()}></label>
-                                                <textarea onChange={ (e)=>changeQuestion(e, index)} id={"textArea"+index.toString()+index.toString()} rows="4"  readOnly={!isQuestionEdited[index]} className="answer" value={value.question}>
-                                                </textarea>
-                                            </div>
-                                        </div>
-                                        {Array.from(Array(4), (_e, i) => {
-                                            return ( 
-                                                <div className="answer-box" id={"a"+i.toString()+index.toString()} key={i}  >
-                                                    <div className="container">
-                                                        <div  className="answer-label">{answersLabel[i]}</div>
-                                                        {i===value.correctAnswer ? (
-                                                            <input id={"answer"+i+"/"+index} style={{backgroundColor: "var(--green-correct)"}} onChange={ (e)=>changeAnswers(e, index, i)} readOnly={!isQuestionEdited[index]} className="answer" value={value.answers[i]}></input>
-                                                        ) : (
-                                                            <input id={"answer"+i+"/"+index} onChange={ (e)=>changeAnswers(e, index, i)} readOnly={!isQuestionEdited[index]} className="answer" value={value.answers[i]}></input>
-                                                        )}    
-
-                                                            <input onChange={(e) => changeCorrectAnswer(e, index)} checked={i===value.correctAnswer} value={i} type="radio"  name={index+"checkButton"}></input>
-                                                            <span className="checkmark"></span>
-
-                                                    </div>    
-                                                </div>
-                                            )
-                                        })}
-                                        <div className="question">
-                                            <div className="container">
-                                                <textarea onChange={ (e)=>changeQuestionDescription(e, index)} id={"description"+index.toString()+index.toString()} rows="4" className="answer" readOnly={!isQuestionEdited[index]} value={value.description}>
-
-                                                </textarea>
-                                            </div>    
-                                            {Array.from(Array(4), (_e, i) => {
-                                                return (
-                                                    <div key={i} className="container margin-top">
-                                                        <div className="answer-label">{answersLabel[i]}</div>
-                                                        {showPercentageBar(i, index)}
-                                                    </div>         
-                                                )
-                                            })}
-                                            <div className="align-right">
-                                                <label> Drop Data 
-                                                    <input type="radio" onClick={()=>changeDropData(index)} checked={dropData[index]} readOnly></input>
-                                                    <span className="checkmark"></span>
-                                                </label>
-                                            </div>
-                                            <div className="tags" >
-                                                <label >Add Category</label>
-                                                <input readOnly={!isQuestionEdited[index]} maxLength="16" className="add"  id={"category-field"+index} type="text" value={newCategories[index]} onChange={ (e)=>changeCategory(e, index)} ></input>
-                                                <input disabled={!isQuestionEdited[index]} type="submit" value="Add" onClick={ (e)=>addCategory(e, index)}></input><br/>
-                                                { suggestedCategories[index].length > 0 && newCategoriesErrors[index].length === 0 ? ( 
-                                                    <div className="suggestion-dropdown">
-                                                        {suggestedCategories[index].map((value, index2) => { 
-                                                            return(
-                                                                <div onClick={ (_e) => addSuggested(value, index2) } className="suggestion" key={index2} >
-                                                                    {value} 
-                                                                </div>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                ) : null}          
-                                                {newCategoriesErrors[index].map((value2, index2) => {
-                                                    return(
-                                                        <div key={index2} className="error">{value2}</div>
-                                                    )
-                                                })}
-                                                {value.category.map((value2, index2) => {
-                                                    return(
-                                                        <span key={index2} className="delete-span" >{value2} 
-                                                            {isQuestionEdited[index] ? (
-                                                                <img  className="delete-mark" onClick={ () => deleteCategory(index,index2)} src={deleteSign} alt="delete" /> 
-                                                            ) : null}
-                                                        </span>
-                                                    )
-                                                })}
-                                            </div>
-                                            <div className="author-name">Author: {value.author[0]["username"]} </div>
-                                            <div className="align-right">
-                                                {errorsInUpdateOfQuestion[index].map((value2, index2) => {
-                                                    return(
-                                                        <div key={index2} className="error">{value2}</div>
-                                                    )
-                                                })}
-                                                {user===value.author[0]["username"] ? (
-                                                    <span>
-                                                        {!isQuestionEdited[index] ? (
-                                                            <span>
-                                                                <button className="button blue-button" onClick={ () => makeQuestionEditable(index)}>Edit</button>
-                                                                <button className="button red-button" onClick={ () => deleteQuestion(index)}>Delete</button>
-                                                            </span>
-                                                        ) : (
-                                                            <span>
-                                                                <button className="button blue-button" onClick={ () => discardChanges(index)}>Discard Changes</button>  
-                                                                <button className="button blue-button" onClick={ () => changeQuestionInBackend(index)}>Save Changes</button>
-                                                            </span>
-                                                        )}  
-                                                </span>
-                                                ) : null}
-                                            </div>    
-                                        </div>  
-                                        
-                                    </div>   
-                                )
-                         })}
-                         <PageBar amountOfPages={amountOfPages} link={"http://localhost:3001/profile/question/?user=Noob123456"}/>
+                        <div>
+                            <div className="container columns2">
+                                {questions.map((value, index) => {
+                                    return(
+                                        <QuestionEdit key={index} addSuggested={addSuggested} changeDropData={changeDropData} changeAnswers={changeAnswers} 
+                                        user={user} question={questions[index]} addCategory={addCategory} changeCorrectAnswer={changeCorrectAnswer}
+                                        index={index} deleteCategory={deleteCategory} changeCategory={changeCategory} changeQuestion={changeQuestion}
+                                        changeQuestionDescription={changeQuestionDescription} changeQuestionInBackend={changeQuestionInBackend}
+                                        discardChanges={discardChanges} makeQuestionEditable={makeQuestionEditable} deleteQuestionInBackend={deleteQuestionInBackend}
+                                        setIsModalOpen={setIsModalOpen} setQuestionBeingDeleted={setQuestionBeingDeleted}
+                                        /> 
+                                    )
+                            })}
+                        </div>
+                        <PageBar amountOfPages={amountOfPages} link={"http://localhost:3001/profile/question/?user=Noob123456"}/>
                     </div>
                     ):(
                         <p className="notFound">Looks like you haven't created question yet, go <a href="/add-question">there</a> to create one</p>
@@ -459,40 +323,7 @@ const YourQuestions = ({ location, user }) => {
             ):(
                 <LoadingCircle/>
             )}  
-            <ReactModal
-                isOpen={isModalOpen}
-                contentLabel={"Delete Question"}
-                id={"delete"}
-                shouldCloseOnOverlayClick={true}
-                shouldCloseOnEsc={true}
-                shouldReturnFocusAfterClose={true}z
-                
-                appElement={document.getElementById('root') || undefined}
-                style={{
-                    overlay: {
-                        
-                        padding: "1rem"
-                    },
-                    content: {
-                        marginRight: "auto",
-                        marginLeft: "auto",
-                        minWidth: "15rem",
-                        width: "25%",
-                        border: '1px solid #ccc',
-                        background: '#fff',
-                        WebkitOverflowScrolling: 'touch',
-                        borderRadius: '4px',
-                        
-                        padding: '0.8rem',
-                        height: "fit-content"
-                    }
-                }}>
-                Are you sure you want to delete this question?
-                <div className="right" style={{marginTop: "0.5rem"}}>
-                    <button className="button blue-button" onClick={ () => setIsModalOpen(false)} >Close</button>
-                    <button className="button red-button" onClick={ () => deleteQuestionInBackend()} >Delete</button>
-                </div>
-            </ReactModal>
+            <DeleteModal isModalOpen={isModalOpen} deleteFunction={deleteQuestionInBackend} setIsModalOpen={setIsModalOpen}/>
         </div>
     )
 }

@@ -27,6 +27,7 @@ export default class AuthenticationDAO {
             const newUser = { 
                 username: username,
                 password: hashedPassword,
+                isAdmin: false
             }
             return await users.insertOne(newUser)
         } catch(e){
@@ -44,6 +45,23 @@ export default class AuthenticationDAO {
             return {error: e}
         }
       
+    }
+
+
+    static async isUserAdmin(token){
+        try{
+            if(token == null) return false
+            let id = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+            const userDb = await users.findOne({ '_id': {$eq: ObjectId(id)} })
+            const doesTokenBelongsToAdminUser = userDb===undefined || !userDb?.isAdmin
+            if(doesTokenBelongsToAdminUser){
+                return false
+            }
+            return true
+        }
+        catch(e){
+            return {error : e}
+        }    
     }
 
     static async setUser(req, res, nex){

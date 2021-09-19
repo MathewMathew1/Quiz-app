@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from "react"
 import questionMark from "../questionMark.svg" 
 import deleteSign from "../deleteSign.png" 
+import useArray from "./CustomHooks/useArray"
 
-const AddQuestion = (props) => {
+const AddQuestion = () => {
     
     const [question, setQuestion] =  useState("")
     const [answerA, setAnswerA] =  useState("")
@@ -11,12 +12,14 @@ const AddQuestion = (props) => {
     const [answerD, setAnswerD] =  useState("")
     const [description, setDescription] =  useState("")
     const [category, setCategory] =  useState("")
-    const [categories, setCategories] =  useState([])
-    const [errors, setErrors] = useState([])
     const [correctAnswer, setCorrectAnswer] = useState("0")
 
-    const [categoriesForSuggestion, setCategoriesForSuggestion] = useState([])
-    const [suggestedCategories, setSuggestedCategories] = useState([])
+    const categories = useArray([])
+    const errors = useArray([])
+    const categoriesForSuggestion = useArray([])
+    const suggestedCategories = useArray([])
+
+
 
     useEffect(  () => {
         document.title = "Add question"
@@ -32,7 +35,7 @@ const AddQuestion = (props) => {
                 }})
                 .then(response => response.json())
                 .then(response => {            
-                    setCategoriesForSuggestion(response)
+                    categoriesForSuggestion.set(response)
                     return  
                 })
                 .catch(error=>{console.log(error)})
@@ -41,21 +44,21 @@ const AddQuestion = (props) => {
         getCategories()
         return () => {
             controller.abort()
-        }
+        } // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const createQuestion = async (e) =>{
 
         e.preventDefault()
 
-        console.log(correctAnswer)
-        setErrors([])
+        errors.set([])
+
 
         const body = {
             "question": question,
             "answers": [answerA, answerB, answerC, answerD],
             "correctAnswer": correctAnswer,
-            "category": categories,
+            "category": categories.array,
             "description": description,
         }
 
@@ -70,7 +73,7 @@ const AddQuestion = (props) => {
             .then(response => {
                 console.log(response)
                 if(response.error){
-                    setErrors(errors => [...errors, response.error])
+                    errors.push(response.error)
                     return
                 }
                 setQuestion("")
@@ -78,7 +81,7 @@ const AddQuestion = (props) => {
                 setAnswerB("")
                 setAnswerC("")
                 setAnswerD("")
-                setCategories([])
+                categories.set([])
                 setDescription("")
                 setCategory("")
                 setCorrectAnswer(0)
@@ -87,50 +90,48 @@ const AddQuestion = (props) => {
             .catch(error=>{console.log(error)})
     }
 
-    const deleteCategory = (index) =>{
-        let categoriesCopy = [...categories]
-        categoriesCopy.splice(index, 1)
-        setCategories(categoriesCopy)
-    }
-
     const addCategory = (e) => {
         e.preventDefault()
-        setErrors([])
+        errors.set([])
+        let newErrors = []
+
         if (category.length < 4){
-            setErrors(errors => [...errors, "Category name too short at least 4 letters required."])
+            newErrors.push("Category name too short at least 4 letters required.")
+            errors.set(newErrors)
             return
         }
-        if(categories.includes(category)){
-            setErrors(errors => [...errors, "This category is already used in this question."])
+        if(categories.array.includes(category)){
+            newErrors.push("This category is already used in this question.")
+            errors.set(newErrors)
             return
         }
         setCategory("")
-        setCategories(categories => [...categories, category])
+        categories.push(category)   
     }
 
     useEffect(  () => {
         if(category.length<3){
-            let copySuggestedCategories = []
-            setSuggestedCategories(copySuggestedCategories)
+            suggestedCategories.set([])
             return
         }
         
         let copySuggestedCategories = []
-        for(let i=0; i<categoriesForSuggestion.length; i++){
+        console.log(categoriesForSuggestion.array)
+        for(let i=0; i<categoriesForSuggestion.array.length; i++){
             if(copySuggestedCategories.length>3){
                break 
             }
-            if(categoriesForSuggestion[i].includes(category) && !categories.includes(categoriesForSuggestion[i])){
-                copySuggestedCategories.push(categoriesForSuggestion[i])
+            if(categoriesForSuggestion.array[i].includes(category) && !categories.includes(categoriesForSuggestion.array[i])){
+                copySuggestedCategories.push(categoriesForSuggestion.array[i])
             }
         }
-        setSuggestedCategories(copySuggestedCategories)
-
+        console.log(copySuggestedCategories)
+        suggestedCategories.set(copySuggestedCategories) // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [category])
 
     
     const addSuggested = (value) =>{
-        setCategories(categories => [...categories, value])
+        categories.push(value)
         setCategory("")
     } 
 
@@ -168,15 +169,19 @@ const AddQuestion = (props) => {
                             <br/>
                             
                             <label htmlFor="description">Description</label> 
-                            <textarea placeholder="Description, explaining question shown after user answer" className="input"  id="description" type="text" value={description} onChange={ (e)=>setDescription(e.target.value)} rows="4" required></textarea><br/>
-                            
+                            <textarea placeholder="Description, explaining question shown after user answer" className="input"  
+                                id="description" type="text" value={description} onChange={ (e)=>setDescription(e.target.value)} rows="4" required>
+                            </textarea><br/>
                             <label htmlFor="category-field">Add Category</label>
-                            <div>
-                                <input autoComplete="off" placeholder="At least 4 letters" maxLength="16"  className="input margin0-bottom"  id="category-field" type="text" value={category} onChange={ (e)=>{setCategory(e.target.value.toLocaleLowerCase()); setErrors([])} } ></input>             
+                            <div className="blockForSuggestion">
+                                <input autoComplete="off" placeholder="At least 4 letters" maxLength="16"  className="input margin0-bottom"
+                                  id="category-field" type="text" value={category} 
+                                  onChange={ (e)=>{setCategory(e.target.value.toLocaleLowerCase()); errors.set([])} } >
+                                </input>             
                                 <input disabled={category.length < 4} type="submit" style={{marginLeft: "-3rem"}} value="Add" onClick={ (e)=>addCategory(e) }></input><br/>
-                                { suggestedCategories.length > 0 && errors.length === 0 ? ( 
+                                { suggestedCategories.array.length > 0 && errors.array.length === 0 ? ( 
                                     <div className="suggestion-dropdown">
-                                        {suggestedCategories.map((value, index) => { 
+                                        {suggestedCategories.array.map((value, index) => { 
                                             return(
                                                 <div onClick={ (e) => addSuggested(value) } className="suggestion" key={index} >
                                                     {value} 
@@ -187,16 +192,15 @@ const AddQuestion = (props) => {
                                 ) : null}
                             </div>    
                             <div className="tags" >
-                                {categories.map((value, index) => {
+                                {categories.array.map((value, index) => {
                                     return(
                                         <span key={index} className="delete-span" >{value} 
-                                            <img className="delete-mark" onClick={ () => deleteCategory(index)} src={deleteSign} alt="delete" /> 
+                                            <img className="delete-mark" onClick={ () => categories.removeValueByIndex(index)} src={deleteSign} alt="delete" /> 
                                         </span>
                                     )
                                 })}
                             </div>
-
-                        {errors.map((value) => {
+                        {errors.array.map((value) => {
                             return(
                                 <div className="error">{value}</div>
                             )
