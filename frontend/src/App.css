@@ -248,12 +248,16 @@ input[type="submit"]:disabled{
 /*end PageBar*/
 
 /* adminPage*/
+.adminPageMain{
+  background-color: #d4c5c5;
+}
+
 .adminPage-categories{
   display: flex;
   flex-wrap: wrap;
   padding-bottom: 2rem;
+  justify-content: center;
   gap: 4rem;
-  background-color: #d4c5c5;
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
@@ -943,6 +947,13 @@ textarea {
   align-items: center;
 }
 
+.center-vertically {
+  
+  display: flex;
+  justify-content: center;
+  
+}
+
 /* loader*/
 .loader {
   border: 16px solid #f3f3f3;
@@ -967,6 +978,20 @@ textarea {
 
 
 @media screen and (max-width: 600px) {
+
+  .adminPage-categories{
+    margin: 0;
+    gap: 1rem;
+    padding: 0.5rem
+  }
+
+  .adminPage-categories> div{
+ 
+    min-width: 150px;
+
+    flex-basis: 40%;
+    
+  }
 
   .blockForSuggestion{
     display: block
