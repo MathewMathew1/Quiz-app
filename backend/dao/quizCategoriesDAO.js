@@ -63,6 +63,43 @@ export default class QuizCategoriesDAO {
         }
     }
 
+
+    static async changeInGroups(changes) {
+        try{
+            let modifiedCount = 0
+            for(let i=0; i<changes.length; i++){
+                const removingCategoryFromOldGroup = await groupCategories.updateOne(
+                    { name : changes[i].nameOfFormerGroup},
+                    { $pull: {categories: changes[i].nameOfCategory}} 
+                            
+                )
+
+                const addingCategoryFromOldGroup = await groupCategories.updateOne(
+                    { name : changes[i].nameOfNewGroup},
+                    { $push: {categories: changes[i].nameOfCategory}} 
+                            
+                )
+                modifiedCount =+ removingCategoryFromOldGroup.modifiedCount
+                modifiedCount =+ addingCategoryFromOldGroup.modifiedCount
+            }
+            let response 
+
+            if(changes.length*2===modifiedCount){
+                response = "Everything updated correctly"
+            }
+            else if(modifiedCount!==0){
+                response = `Updated ${modifiedCount} out of ${changes.length*2}, possibly someone removed category from group before`
+            }
+            else{
+                response = `Failed to update`
+            }
+            return response
+        }catch(e){
+            console.log(e)
+            return {error: e}
+        }
+    }
+
     static async createNewCategory(name) {
         try{
             const updateResponse = await groupCategories.updateOne(

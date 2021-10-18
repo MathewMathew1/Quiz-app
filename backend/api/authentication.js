@@ -66,7 +66,7 @@ export default class AuthenticationCtrl {
             let response = await AuthenticationDAO.isUserAdmin(token)
             
             var { error } = response
-            console.log(response)
+
             if (error) {
                 res.status(400).json({error: " Unexpected Error occurred" })
                 return

@@ -64,7 +64,7 @@ export default class AuthenticationDAO {
         }    
     }
 
-    static async setUser(req, res, nex){
+    static async setUser(req){
         try{
 
             const authHeader = req.headers["authorization"]

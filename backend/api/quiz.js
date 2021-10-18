@@ -43,8 +43,6 @@ export default class QuizCtrl {
     }    
     
     static async apiDeleteQuestion(req, res, next,){
-        await AuthenticationDAO.setUser(req, res, next)
-        if(req.user === undefined) return res.status(403).json({error: "You must be logged in to remove question."})
         try{
             const user = req.user
             const questionId = req.params.id || {}
@@ -64,7 +62,6 @@ export default class QuizCtrl {
     }
 
     static async apiUpdateQuestion(req, res, next,){
-        await AuthenticationDAO.setUser(req, res, next)
         try{
             if(req.body.answerFromUser!==undefined){
                // this part of code is for updating answer's from user
@@ -87,7 +84,7 @@ export default class QuizCtrl {
                 return res.status(201).json({error: "question answered"})
 
             }
-            if(req.user === undefined) return res.status(403).json({error: "You must be logged in to remove question."})
+            if(req.user === undefined) return res.status(403).json({error: "You must be logged in to update question."})
             const user = req.user   // this part of code is for updating content of question
             const questionId = req.params.id
             const question = req.body.question
@@ -127,7 +124,6 @@ export default class QuizCtrl {
     }
 
     static async apiGetQuestion(req, res, next,){
-        await AuthenticationDAO.setUser(req, res, next)
         try{
             const questionsPerPage = req.query.questionsPerPage ?parseInt(req.query.questionsPerPage, 10): 10
             const page = req.query.page ? parseInt(req.query.page, 10): 0

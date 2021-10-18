@@ -10,7 +10,6 @@ export default class QuizCategoriesCtrl {
     static async apiGetAllGroups(req, res, next){
         try{
             let updatedData = req.query.updatedData
-            console.log("updatedData="+updatedData)
             if(updatedData){
                 let groups = await QuizCategoriesDAO.getAllCategoriesInGroups()
                 var { error } = groups
@@ -20,9 +19,8 @@ export default class QuizCategoriesCtrl {
                 console.log(groups)
                 return res.json(groups)
             }
-            let groups 
 
-            groups = redisClient.get("groups", function(err, reply) {
+            redisClient.get("groups", function(err, reply) {
     
                 if (err) {
                     return res.status(400).json({error: "Unexpected error, try again." })
@@ -55,10 +53,28 @@ export default class QuizCategoriesCtrl {
         }
     }                                                               
 
+
+    static async apiChangeInGroups(req, res, next){
+        try{
+            let changes = req.body.changes
+            console.log(changes)
+            let response = await QuizCategoriesDAO.changeInGroups(changes)
+
+            var { error } = response
+
+            if (error) {
+                res.status(400).json({error: "Something went wrong" })
+                return
+            }
+            res.status(201).json(response)
+        }
+        catch(e){
+            return res.status(500).json("Something went wrong")
+        }
+    }
+
     static async apiGetUserQuizData(req, res, next){
         try{
-            await AuthenticationDAO.setUser(req, res, next)
-            if(req.user === undefined) return res.status(403).json({error: "You must be logged in to access data."})
             let User = req.user
             let category = req.query.category
             let response
